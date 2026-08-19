@@ -8,7 +8,7 @@ import logging
 from collections.abc import Callable
 from typing import TYPE_CHECKING, cast
 
-from PySide6.QtCore import QModelIndex, QObject, QTimer, Qt
+from PySide6.QtCore import QModelIndex, QObject, Qt, QTimer
 from PySide6.QtWidgets import QComboBox, QLineEdit, QPushButton, QTreeView, QWidget
 
 from app.utils.i18n import tr_factory
