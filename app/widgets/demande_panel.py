@@ -22,6 +22,7 @@ from PySide6.QtWidgets import (
 )
 
 from app.models import Demande
+from app.models_cast import as_int, as_optional_float
 from app.utils.common import fmt_money_short
 from app.utils.i18n import tr_factory
 from app.widgets.demande_form_labels import ACTION_LABELS, TYPE_LABELS
@@ -239,17 +240,12 @@ class DemandePanel(QWidget):
 
     @staticmethod
     def _coerce_int(value: object, default: int) -> int:
-        try:
-            return int(value) if value is not None else default
-        except (TypeError, ValueError):
-            return default
+        return as_int(value, default)
 
     @staticmethod
     def _coerce_float(value: object) -> float:
-        try:
-            return float(value) if value not in (None, "") else 0.0
-        except (TypeError, ValueError):
-            return 0.0
+        result = as_optional_float(value)
+        return result if result is not None else 0.0
 
     @staticmethod
     def _compact_range(min_value: object, max_value: object, suffix: str) -> str:
@@ -307,7 +303,9 @@ class DemandePanel(QWidget):
         )
         if surface:
             details.append(surface)
-        budget = self._compact_budget(self._data.get("budget_min"), self._data.get("budget_max"))
+        budget = self._compact_budget(
+            self._data.get("budget_min"), self._data.get("budget_max")
+        )
         if budget:
             details.append(budget)
         locations = str(self._data.get("locations") or "").strip()

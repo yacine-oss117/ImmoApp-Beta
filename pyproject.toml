@@ -39,7 +39,6 @@ module = [
     "app.delegates.*",
     "app.main_window",
     "app.main_window_tabs",
-    "app.utils.bootstrap",
 ]
 ignore_errors = true
 
@@ -58,7 +57,6 @@ disable_error_code = ["import-untyped"]
 [[tool.mypy.overrides]]
 module = [
     "server.accounts.*",
-    "server.tests",
     "server.api.apps",
 ]
 disallow_subclassing_any = false
