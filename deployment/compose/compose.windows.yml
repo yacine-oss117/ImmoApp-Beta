@@ -1,0 +1,49 @@
+volumes:
+  pgdata:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:/ProgramData/ImmoApp/data/pgdata/
+  rabbitmq_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:/ProgramData/ImmoApp/data/rabbitmq
+  valkey_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:/ProgramData/ImmoApp/data/valkey
+  caddy_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:/ProgramData/ImmoApp/data/caddy/data
+  caddy_config:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:/ProgramData/ImmoApp/data/caddy/config
+  minio_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:/ProgramData/ImmoApp/data/minio
+  clamav_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:/ProgramData/ImmoApp/data/clamav
+  app_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: C:/ProgramData/ImmoApp/data/app

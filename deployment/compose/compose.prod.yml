@@ -1,0 +1,245 @@
+﻿x-prod-security: &prod-security
+  BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER?set_to_1}
+  IMMOAPP_PUBLIC_BASE_URL: ${IMMOAPP_PUBLIC_BASE_URL?set_public_base_url}
+
+x-prod-openbao-tls: &prod-openbao-tls
+  BAO_ADDR: ${BAO_ADDR_DOCKER?set_https_openbao_addr}
+  BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER?set_to_1}
+  BAO_CACERT: ${BAO_CACERT_DOCKER:-/run/immoapp-secrets/openbao-ca.crt}
+  SSL_CERT_FILE: ${BAO_CACERT_DOCKER:-/run/immoapp-secrets/openbao-ca.crt}
+
+services:
+  db:
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB?required}
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER?required}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD?required}
+      IMMOAPP_APP_DB_USER: ${POSTGRES_USER?required}
+      IMMOAPP_APP_DB_PASSWORD: ${POSTGRES_PASSWORD?required}
+
+  rabbitmq:
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER?required}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD?required}
+
+  openbao-init:
+    environment:
+      <<: *prod-openbao-tls
+
+  openbao-seed:
+    environment:
+      <<: *prod-openbao-tls
+
+  openbao:
+    command:
+      - bao
+      - server
+      - -config=/openbao/config/openbao.prod.hcl
+    volumes:
+      - ./deployment/docker/openbao/openbao.prod.hcl:/openbao/config/openbao.prod.hcl:ro
+      - openbao_data:/openbao/file
+      - openbao_logs:/openbao/logs
+      - ${IMMOAPP_OPENBAO_TLS_DIR:-C:/ProgramData/ImmoApp/secrets/openbao/tls}:/openbao/tls:ro
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "BAO_CACERT=/openbao/tls/ca.crt bao status -address=https://openbao:8200 | grep -q 'Initialized[[:space:]]*true' && BAO_CACERT=/openbao/tls/ca.crt bao status -address=https://openbao:8200 | grep -q 'Sealed[[:space:]]*false'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    environment:
+      <<: [*prod-security, *prod-openbao-tls]
+      ASGI_THREADS: ${ASGI_THREADS_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_WEB_RUNTIME: ${IMMOAPP_WEB_RUNTIME_DOCKER:-gunicorn_uvicorn}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS_DOCKER:?hub_runtime_profile_required}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT_DOCKER:-120}
+      GUNICORN_GRACEFUL_TIMEOUT: ${GUNICORN_GRACEFUL_TIMEOUT_DOCKER:-30}
+      GUNICORN_KEEPALIVE: ${GUNICORN_KEEPALIVE_DOCKER:-5}
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER?required}:${RABBITMQ_PASSWORD?required}@rabbitmq:5672//
+      IMMOAPP_MATCH_BUILD_PIPELINE: direct
+      IMMOAPP_MATCH_RUNTIME_PROFILE: auto
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: "120000"
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: "5000"
+      IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE: ${IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      MATCH_CACHE_DB_BATCH_SIZE: ${MATCH_CACHE_DB_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE: ${IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE_DOCKER:-1000}
+      IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD: ${IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD_DOCKER:-250}
+      IMMOAPP_SESSION_VALIDATE_CACHE_SECONDS: "30"
+      IMMOAPP_AUTH_USER_CACHE_TTL_SECONDS: "300"
+      IMMOAPP_CLIENT_COUNT_CACHE_TTL_SECONDS: "300"
+      IMMOAPP_CLIENT_LIST_CACHE_TTL_SECONDS: "300"
+      IMMOAPP_LISTING_COUNT_CACHE_TTL_SECONDS: "300"
+      IMMOAPP_LISTING_LIST_CACHE_TTL_SECONDS: "300"
+      IMMOAPP_NOTIFICATION_COUNT_CACHE_TTL_SECONDS: "180"
+      IMMOAPP_NOTIFICATION_LIST_CACHE_TTL_SECONDS: "180"
+      IMMOAPP_CLIENTS_LIST_HTTP_CACHE_TTL_SECONDS: "300"
+      IMMOAPP_LISTINGS_LIST_HTTP_CACHE_TTL_SECONDS: "300"
+      IMMOAPP_NOTIFICATIONS_LIST_HTTP_CACHE_TTL_SECONDS: "180"
+      IMMOAPP_USERS_LIST_HTTP_CACHE_TTL_SECONDS: "300"
+      IMMOAPP_INVITES_LIST_HTTP_CACHE_TTL_SECONDS: "300"
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT_DOCKER:-1}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE_DOCKER:-1}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE_DOCKER:-1}
+
+  worker:
+    environment:
+      <<: [*prod-security, *prod-openbao-tls]
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER?required}:${RABBITMQ_PASSWORD?required}@rabbitmq:5672//
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_BUILD_PIPELINE: direct
+      IMMOAPP_MATCH_RUNTIME_PROFILE: auto
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: "120000"
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: "5000"
+      IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE: ${IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      MATCH_CACHE_DB_BATCH_SIZE: ${MATCH_CACHE_DB_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE: ${IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE_DOCKER:-1000}
+      IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD: ${IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD_DOCKER:-250}
+
+  worker-rebuild:
+    environment:
+      <<: [*prod-security, *prod-openbao-tls]
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER?required}:${RABBITMQ_PASSWORD?required}@rabbitmq:5672//
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_BUILD_PIPELINE: direct
+      IMMOAPP_MATCH_RUNTIME_PROFILE: auto
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: "120000"
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: "5000"
+      IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE: ${IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      MATCH_CACHE_DB_BATCH_SIZE: ${MATCH_CACHE_DB_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE: ${IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE_DOCKER:-1000}
+      IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD: ${IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD_DOCKER:-250}
+
+  worker-import:
+    environment:
+      <<: [*prod-security, *prod-openbao-tls]
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER?required}:${RABBITMQ_PASSWORD?required}@rabbitmq:5672//
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_BUILD_PIPELINE: direct
+      IMMOAPP_MATCH_RUNTIME_PROFILE: auto
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: "120000"
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: "5000"
+      IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE: ${IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      MATCH_CACHE_DB_BATCH_SIZE: ${MATCH_CACHE_DB_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE: ${IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE_DOCKER:-1000}
+      IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD: ${IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD_DOCKER:-250}
+    command:
+      [
+        "sh",
+        "-ec",
+        "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app worker -l info -Q imports -c ${CELERY_IMPORT_CONCURRENCY_DOCKER:?hub_runtime_profile_required}",
+      ]
+
+  beat:
+    environment:
+      <<: [*prod-security, *prod-openbao-tls]
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER?required}:${RABBITMQ_PASSWORD?required}@rabbitmq:5672//
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_BUILD_PIPELINE: direct
+      IMMOAPP_MATCH_RUNTIME_PROFILE: auto
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: "120000"
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: "5000"
+      IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE: ${IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      MATCH_CACHE_DB_BATCH_SIZE: ${MATCH_CACHE_DB_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE: ${IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE_DOCKER:-1000}
+      IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD: ${IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD_DOCKER:-250}
+
+  worker-match:
+    environment:
+      <<: [*prod-security, *prod-openbao-tls]
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER?required}:${RABBITMQ_PASSWORD?required}@rabbitmq:5672//
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_BUILD_PIPELINE: direct
+      IMMOAPP_MATCH_RUNTIME_PROFILE: auto
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: "120000"
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: "5000"
+      IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE: ${IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      MATCH_CACHE_DB_BATCH_SIZE: ${MATCH_CACHE_DB_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE: ${IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE_DOCKER:-1000}
+      IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD: ${IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD_DOCKER:-250}
+    command:
+      [
+        "sh",
+        "-ec",
+        "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app worker -l info -Q match_pairs -c ${CELERY_MATCH_PAIRS_CONCURRENCY_DOCKER:?hub_runtime_profile_required}",
+      ]
+
+  caddy:
+    environment:
+      IMMOAPP_UPSTREAM: web:8000
+      IMMOAPP_TLS_DOMAIN: ${IMMOAPP_TLS_DOMAIN?set_public_tls_domain}
+    volumes:
+      - ./deployment/proxy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+

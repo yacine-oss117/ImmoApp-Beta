@@ -1,0 +1,23 @@
+#!/bin/sh
+set -eu
+. /opt/immoapp/runtime/bin/managed-hub-common
+
+init_statuses
+ensure_docker_daemon status || true
+if [ "$docker_info_status" != "GO" ]; then
+  emit_payload "NO-GO" "managed_wsl2_docker_info_not_go" "NO-GO"
+  exit 1
+fi
+if [ ! -f "$compose_file" ]; then
+  emit_payload "NO-GO" "managed_wsl2_runtime_compose_file_missing" "NO-GO"
+  exit 1
+fi
+compose_payload_status="GO"
+compose_pull_policy_status="GO"
+if ! run_with_timeout "$compose_up_timeout" "$runtime_root/logs/docker-compose-down.out" docker compose -f "$compose_file" -p "$project_name" down; then
+  emit_payload "NO-GO" "managed_wsl2_runtime_stop_failed" "NO-GO"
+  exit 1
+fi
+stop_keepalive || true
+emit_payload "GO" "managed_wsl2_runtime_stopped" "GO"
+exit 0

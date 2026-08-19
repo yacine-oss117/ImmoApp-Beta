@@ -1,0 +1,81 @@
+name: Game Day Drill
+
+on:
+  schedule:
+    - cron: "0 4 1 */3 *"
+  workflow_dispatch:
+
+jobs:
+  game-day:
+    runs-on: ubuntu-latest
+    env:
+      POSTGRES_DB: immoapp
+      POSTGRES_USER: immoapp_app
+      POSTGRES_PASSWORD: immoapp_app_pw
+      POSTGRES_ADMIN_USER: immoapp_app
+      POSTGRES_ADMIN_PASSWORD: immoapp_app_pw
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      VALKEY_URL: redis://127.0.0.1:6379/1
+      STORAGE_ENDPOINT_URL: http://127.0.0.1:9000
+      DJANGO_SECRET_KEY: game-day-secret-key
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DJANGO_DEBUG: "1"
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      PYTHONPATH: .
+      IMMOAPP_ENV: "ci"
+      CELERY_BROKER_URL: redis://127.0.0.1:6379/0
+      CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/2
+      ALE_KEY_VERSION: v1
+      ALE_MASTER_KEY: game-day-master-key
+      ALE_SEARCH_SECRET: game-day-search-secret
+      ALE_KDF_SALT: game-day-kdf-salt
+      IMMOAPP_ALLOW_ENV_SECRETS: "1"
+      IMMOAPP_SECRETS_BACKEND: env
+      IMMOAPP_GAME_DAY_REPORT: artifacts/game-day-report.json
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: immoapp
+          POSTGRES_USER: immoapp_app
+          POSTGRES_PASSWORD: immoapp_app_pw
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+      minio:
+        image: bitnami/minio:latest
+        env:
+          MINIO_ROOT_USER: immoapp
+          MINIO_ROOT_PASSWORD: immoapp_minio_pw
+        ports:
+          - 9000:9000
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/server.txt -r requirements/client.txt
+      - name: Ensure schema
+        run: python scripts/check_schema.py
+      - name: Run game day drill
+        env:
+          IMMOAPP_ENFORCE_GAME_DAY: "1"
+          IMMOAPP_GAME_DAY_MULTI_FAILURE: "1"
+          IMMOAPP_GAME_DAY_BUDGET_MS: "5000"
+          IMMOAPP_GAME_DAY_RTO_BUDGET_MS: "12000"
+        run: python scripts/run_game_day_drill.py
+      - name: Upload game day report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: game-day-report
+          path: artifacts/game-day-report.json

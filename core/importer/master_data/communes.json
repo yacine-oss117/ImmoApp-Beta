@@ -1,0 +1,3672 @@
+{
+    "16": {
+        "wilaya_code": "16",
+        "wilaya_name": "Alger",
+        "communes": [
+            {
+                "code": "16001",
+                "fr": "Alger Centre",
+                "ar": "الجزائر الوسطى",
+                "postal": "16000",
+                "aliases": [
+                    "alger centre",
+                    "centre",
+                    "downtown"
+                ]
+            },
+            {
+                "code": "16002",
+                "fr": "Sidi M'Hamed",
+                "ar": "سيدي امحمد",
+                "postal": "16000",
+                "aliases": [
+                    "sidi mhamed",
+                    "sidi m'hamed"
+                ]
+            },
+            {
+                "code": "16003",
+                "fr": "El Madania",
+                "ar": "المدنية",
+                "postal": "16000",
+                "aliases": [
+                    "el madania",
+                    "madania"
+                ]
+            },
+            {
+                "code": "16004",
+                "fr": "Belouizdad",
+                "ar": "بلوزداد",
+                "postal": "16000",
+                "aliases": [
+                    "belouizdad",
+                    "belcourt",
+                    "hamma"
+                ]
+            },
+            {
+                "code": "16005",
+                "fr": "Bab El Oued",
+                "ar": "باب الوادي",
+                "postal": "16000",
+                "aliases": [
+                    "bab el oued",
+                    "bab-el-oued"
+                ]
+            },
+            {
+                "code": "16006",
+                "fr": "Bologhine",
+                "ar": "بولوغين",
+                "postal": "16000",
+                "aliases": [
+                    "bologhine",
+                    "saint eugene"
+                ]
+            },
+            {
+                "code": "16007",
+                "fr": "Casbah",
+                "ar": "القصبة",
+                "postal": "16000",
+                "aliases": [
+                    "casbah",
+                    "kasbah"
+                ]
+            },
+            {
+                "code": "16008",
+                "fr": "Oued Koriche",
+                "ar": "وادي قريش",
+                "postal": "16000",
+                "aliases": [
+                    "oued koriche"
+                ]
+            },
+            {
+                "code": "16009",
+                "fr": "Bir Mourad Raïs",
+                "ar": "بئر مراد رايس",
+                "postal": "16000",
+                "aliases": [
+                    "bir mourad rais",
+                    "bmr"
+                ]
+            },
+            {
+                "code": "16010",
+                "fr": "El Biar",
+                "ar": "الأبيار",
+                "postal": "16000",
+                "aliases": [
+                    "el biar",
+                    "biar"
+                ]
+            },
+            {
+                "code": "16011",
+                "fr": "Bouzareah",
+                "ar": "بوزريعة",
+                "postal": "16000",
+                "aliases": [
+                    "bouzareah",
+                    "bouzarea"
+                ]
+            },
+            {
+                "code": "16012",
+                "fr": "Birkhadem",
+                "ar": "بئر خادم",
+                "postal": "16000",
+                "aliases": [
+                    "birkhadem",
+                    "birtouta"
+                ]
+            },
+            {
+                "code": "16013",
+                "fr": "El Harrach",
+                "ar": "الحراش",
+                "postal": "16000",
+                "aliases": [
+                    "el harrach",
+                    "harrach",
+                    "maison carree"
+                ]
+            },
+            {
+                "code": "16014",
+                "fr": "Baraki",
+                "ar": "براقي",
+                "postal": "16000",
+                "aliases": [
+                    "baraki"
+                ]
+            },
+            {
+                "code": "16015",
+                "fr": "Oued Smar",
+                "ar": "وادي السمار",
+                "postal": "16000",
+                "aliases": [
+                    "oued smar"
+                ]
+            },
+            {
+                "code": "16016",
+                "fr": "Bachdjerrah",
+                "ar": "باش جراح",
+                "postal": "16000",
+                "aliases": [
+                    "bachdjerrah",
+                    "bach djerrah"
+                ]
+            },
+            {
+                "code": "16017",
+                "fr": "Hussein Dey",
+                "ar": "حسين داي",
+                "postal": "16000",
+                "aliases": [
+                    "hussein dey",
+                    "hussein-dey"
+                ]
+            },
+            {
+                "code": "16018",
+                "fr": "Kouba",
+                "ar": "القبة",
+                "postal": "16000",
+                "aliases": [
+                    "kouba"
+                ]
+            },
+            {
+                "code": "16019",
+                "fr": "Bourouba",
+                "ar": "بوروبة",
+                "postal": "16000",
+                "aliases": [
+                    "bourouba"
+                ]
+            },
+            {
+                "code": "16020",
+                "fr": "Dar El Beïda",
+                "ar": "الدار البيضاء",
+                "postal": "16000",
+                "aliases": [
+                    "dar el beida",
+                    "maison blanche",
+                    "aeroport"
+                ]
+            },
+            {
+                "code": "16021",
+                "fr": "Bab Ezzouar",
+                "ar": "باب الزوار",
+                "postal": "16000",
+                "aliases": [
+                    "bab ezzouar",
+                    "babezzouar"
+                ]
+            },
+            {
+                "code": "16022",
+                "fr": "Ben Aknoun",
+                "ar": "بن عكنون",
+                "postal": "16000",
+                "aliases": [
+                    "ben aknoun",
+                    "benaknoun"
+                ]
+            },
+            {
+                "code": "16023",
+                "fr": "Dely Ibrahim",
+                "ar": "دالي ابراهيم",
+                "postal": "16000",
+                "aliases": [
+                    "dely ibrahim",
+                    "dely-ibrahim",
+                    "golf"
+                ]
+            },
+            {
+                "code": "16024",
+                "fr": "Hammamet",
+                "ar": "حمامات",
+                "postal": "16000",
+                "aliases": [
+                    "hammamet",
+                    "el hammamet"
+                ]
+            },
+            {
+                "code": "16025",
+                "fr": "Raïs Hamidou",
+                "ar": "رايس حميدو",
+                "postal": "16000",
+                "aliases": [
+                    "rais hamidou",
+                    "pointe pescade"
+                ]
+            },
+            {
+                "code": "16026",
+                "fr": "Djasr Kasentina",
+                "ar": "جسر قسنطينة",
+                "postal": "16000",
+                "aliases": [
+                    "djasr kasentina",
+                    "pont constantine"
+                ]
+            },
+            {
+                "code": "16027",
+                "fr": "El Mouradia",
+                "ar": "المرادية",
+                "postal": "16000",
+                "aliases": [
+                    "el mouradia",
+                    "mouradia"
+                ]
+            },
+            {
+                "code": "16028",
+                "fr": "Hydra",
+                "ar": "حيدرة",
+                "postal": "16035",
+                "aliases": [
+                    "hydra",
+                    "el hydra",
+                    "الحيدرة"
+                ]
+            },
+            {
+                "code": "16029",
+                "fr": "Mohammadia",
+                "ar": "المحمدية",
+                "postal": "16000",
+                "aliases": [
+                    "mohammadia",
+                    "lavigerie"
+                ]
+            },
+            {
+                "code": "16030",
+                "fr": "Bordj El Kiffan",
+                "ar": "برج الكيفان",
+                "postal": "16000",
+                "aliases": [
+                    "bordj el kiffan",
+                    "fort de l'eau"
+                ]
+            },
+            {
+                "code": "16031",
+                "fr": "El Magharia",
+                "ar": "المغارية",
+                "postal": "16000",
+                "aliases": [
+                    "el magharia",
+                    "magharia"
+                ]
+            },
+            {
+                "code": "16032",
+                "fr": "Beni Messous",
+                "ar": "بني مسوس",
+                "postal": "16000",
+                "aliases": [
+                    "beni messous"
+                ]
+            },
+            {
+                "code": "16033",
+                "fr": "Les Eucalyptus",
+                "ar": "الكاليتوس",
+                "postal": "16000",
+                "aliases": [
+                    "les eucalyptus",
+                    "eucalyptus"
+                ]
+            },
+            {
+                "code": "16034",
+                "fr": "Birtouta",
+                "ar": "بئر توتة",
+                "postal": "16000",
+                "aliases": [
+                    "birtouta"
+                ]
+            },
+            {
+                "code": "16035",
+                "fr": "Tessala El Merdja",
+                "ar": "تسالة المرجة",
+                "postal": "16000",
+                "aliases": [
+                    "tessala el merdja"
+                ]
+            },
+            {
+                "code": "16036",
+                "fr": "Ouled Chebel",
+                "ar": "أولاد شبل",
+                "postal": "16000",
+                "aliases": [
+                    "ouled chebel"
+                ]
+            },
+            {
+                "code": "16037",
+                "fr": "Sidi Moussa",
+                "ar": "سيدي موسى",
+                "postal": "16000",
+                "aliases": [
+                    "sidi moussa"
+                ]
+            },
+            {
+                "code": "16038",
+                "fr": "Aïn Taya",
+                "ar": "عين طاية",
+                "postal": "16000",
+                "aliases": [
+                    "ain taya"
+                ]
+            },
+            {
+                "code": "16039",
+                "fr": "Bordj El Bahri",
+                "ar": "برج البحري",
+                "postal": "16000",
+                "aliases": [
+                    "bordj el bahri",
+                    "cap matifou"
+                ]
+            },
+            {
+                "code": "16040",
+                "fr": "El Marsa",
+                "ar": "المرسى",
+                "postal": "16000",
+                "aliases": [
+                    "el marsa",
+                    "la perouse"
+                ]
+            },
+            {
+                "code": "16041",
+                "fr": "Heuraoua",
+                "ar": "هراوة",
+                "postal": "16000",
+                "aliases": [
+                    "heuraoua",
+                    "heraoua"
+                ]
+            },
+            {
+                "code": "16042",
+                "fr": "Rouïba",
+                "ar": "رويبة",
+                "postal": "16000",
+                "aliases": [
+                    "rouiba"
+                ]
+            },
+            {
+                "code": "16043",
+                "fr": "Reghaïa",
+                "ar": "الرغاية",
+                "postal": "16000",
+                "aliases": [
+                    "reghaia"
+                ]
+            },
+            {
+                "code": "16044",
+                "fr": "Aïn Benian",
+                "ar": "عين البنيان",
+                "postal": "16000",
+                "aliases": [
+                    "ain benian",
+                    "guyotville"
+                ]
+            },
+            {
+                "code": "16045",
+                "fr": "Staoueli",
+                "ar": "سطاوالي",
+                "postal": "16000",
+                "aliases": [
+                    "staoueli"
+                ]
+            },
+            {
+                "code": "16046",
+                "fr": "Zeralda",
+                "ar": "زرالدة",
+                "postal": "16000",
+                "aliases": [
+                    "zeralda"
+                ]
+            },
+            {
+                "code": "16047",
+                "fr": "Mahelma",
+                "ar": "المحالمة",
+                "postal": "16000",
+                "aliases": [
+                    "mahelma"
+                ]
+            },
+            {
+                "code": "16048",
+                "fr": "Rahmania",
+                "ar": "الرحمانية",
+                "postal": "16000",
+                "aliases": [
+                    "rahmania"
+                ]
+            },
+            {
+                "code": "16049",
+                "fr": "Souidania",
+                "ar": "السويدانية",
+                "postal": "16000",
+                "aliases": [
+                    "souidania"
+                ]
+            },
+            {
+                "code": "16050",
+                "fr": "Cheraga",
+                "ar": "الشراقة",
+                "postal": "16000",
+                "aliases": [
+                    "cheraga"
+                ]
+            },
+            {
+                "code": "16051",
+                "fr": "Ouled Fayet",
+                "ar": "أولاد فايت",
+                "postal": "16000",
+                "aliases": [
+                    "ouled fayet"
+                ]
+            },
+            {
+                "code": "16052",
+                "fr": "El Achour",
+                "ar": "الأخضرية",
+                "postal": "16000",
+                "aliases": [
+                    "el achour",
+                    "achour"
+                ]
+            },
+            {
+                "code": "16053",
+                "fr": "Draria",
+                "ar": "الدرارية",
+                "postal": "16000",
+                "aliases": [
+                    "draria"
+                ]
+            },
+            {
+                "code": "16054",
+                "fr": "Douera",
+                "ar": "الدويرة",
+                "postal": "16000",
+                "aliases": [
+                    "douera"
+                ]
+            },
+            {
+                "code": "16055",
+                "fr": "Baba Hassen",
+                "ar": "بابا حسن",
+                "postal": "16000",
+                "aliases": [
+                    "baba hassen"
+                ]
+            },
+            {
+                "code": "16056",
+                "fr": "Khraicia",
+                "ar": "خرايسية",
+                "postal": "16000",
+                "aliases": [
+                    "khraicia",
+                    "khraissia"
+                ]
+            },
+            {
+                "code": "16057",
+                "fr": "Saoula",
+                "ar": "السحاولة",
+                "postal": "16000",
+                "aliases": [
+                    "saoula"
+                ]
+            }
+        ]
+    },
+    "09": {
+        "wilaya_code": "09",
+        "wilaya_name": "Blida",
+        "communes": [
+            {
+                "code": "09001",
+                "fr": "Blida",
+                "ar": "البليدة",
+                "postal": "09000",
+                "aliases": [
+                    "blida"
+                ]
+            },
+            {
+                "code": "09002",
+                "fr": "Chebli",
+                "ar": "الشبلي",
+                "postal": "09000",
+                "aliases": [
+                    "chebli"
+                ]
+            },
+            {
+                "code": "09003",
+                "fr": "Bouinan",
+                "ar": "بوعينان",
+                "postal": "09000",
+                "aliases": [
+                    "bouinan"
+                ]
+            },
+            {
+                "code": "09004",
+                "fr": "Oued Alleug",
+                "ar": "وادي العلايق",
+                "postal": "09000",
+                "aliases": [
+                    "oued alleug"
+                ]
+            },
+            {
+                "code": "09005",
+                "fr": "Ouled Yaïch",
+                "ar": "أولاد يعيش",
+                "postal": "09000",
+                "aliases": [
+                    "ouled yaich"
+                ]
+            },
+            {
+                "code": "09006",
+                "fr": "Chréa",
+                "ar": "الشريعة",
+                "postal": "09000",
+                "aliases": [
+                    "chrea"
+                ]
+            },
+            {
+                "code": "09007",
+                "fr": "El Affroun",
+                "ar": "العفرون",
+                "postal": "09000",
+                "aliases": [
+                    "el affroun",
+                    "affroun"
+                ]
+            },
+            {
+                "code": "09008",
+                "fr": "Chiffa",
+                "ar": "الشفة",
+                "postal": "09000",
+                "aliases": [
+                    "chiffa"
+                ]
+            },
+            {
+                "code": "09009",
+                "fr": "Hammam Melouane",
+                "ar": "حمام ملوان",
+                "postal": "09000",
+                "aliases": [
+                    "hammam melouane"
+                ]
+            },
+            {
+                "code": "09010",
+                "fr": "Benkhelil",
+                "ar": "بن خليل",
+                "postal": "09000",
+                "aliases": [
+                    "benkhelil"
+                ]
+            },
+            {
+                "code": "09011",
+                "fr": "Soumaa",
+                "ar": "الصومعة",
+                "postal": "09000",
+                "aliases": [
+                    "soumaa"
+                ]
+            },
+            {
+                "code": "09012",
+                "fr": "Mouzaïa",
+                "ar": "موزاية",
+                "postal": "09000",
+                "aliases": [
+                    "mouzaia"
+                ]
+            },
+            {
+                "code": "09013",
+                "fr": "Souhane",
+                "ar": "صوحان",
+                "postal": "09000",
+                "aliases": [
+                    "souhane"
+                ]
+            },
+            {
+                "code": "09014",
+                "fr": "Meftah",
+                "ar": "مفتاح",
+                "postal": "09000",
+                "aliases": [
+                    "meftah"
+                ]
+            },
+            {
+                "code": "09015",
+                "fr": "Ouled Slama",
+                "ar": "أولاد سلامة",
+                "postal": "09000",
+                "aliases": [
+                    "ouled slama"
+                ]
+            },
+            {
+                "code": "09016",
+                "fr": "Boufarik",
+                "ar": "بوفاريك",
+                "postal": "09000",
+                "aliases": [
+                    "boufarik"
+                ]
+            },
+            {
+                "code": "09017",
+                "fr": "Larbaa",
+                "ar": "الأربعاء",
+                "postal": "09000",
+                "aliases": [
+                    "larbaa"
+                ]
+            },
+            {
+                "code": "09018",
+                "fr": "Oued Djer",
+                "ar": "وادي جر",
+                "postal": "09000",
+                "aliases": [
+                    "oued djer"
+                ]
+            },
+            {
+                "code": "09019",
+                "fr": "Beni Tamou",
+                "ar": "بني تامو",
+                "postal": "09000",
+                "aliases": [
+                    "beni tamou"
+                ]
+            },
+            {
+                "code": "09020",
+                "fr": "Bouarfa",
+                "ar": "بوعرفة",
+                "postal": "09000",
+                "aliases": [
+                    "bouarfa"
+                ]
+            },
+            {
+                "code": "09021",
+                "fr": "Beni Mered",
+                "ar": "بني مراد",
+                "postal": "09000",
+                "aliases": [
+                    "beni mered"
+                ]
+            },
+            {
+                "code": "09022",
+                "fr": "Bougara",
+                "ar": "بوقرة",
+                "postal": "09000",
+                "aliases": [
+                    "bougara"
+                ]
+            },
+            {
+                "code": "09023",
+                "fr": "Guerrouaou",
+                "ar": "قرواو",
+                "postal": "09000",
+                "aliases": [
+                    "guerrouaou",
+                    "guerouaou"
+                ]
+            },
+            {
+                "code": "09024",
+                "fr": "Aïn Romana",
+                "ar": "عين الرمانة",
+                "postal": "09000",
+                "aliases": [
+                    "ain romana"
+                ]
+            },
+            {
+                "code": "09025",
+                "fr": "Djebabra",
+                "ar": "جبابرة",
+                "postal": "09000",
+                "aliases": [
+                    "djebabra"
+                ]
+            }
+        ]
+    },
+    "25": {
+        "wilaya_code": "25",
+        "wilaya_name": "Constantine",
+        "communes": [
+            {
+                "code": "25001",
+                "fr": "Constantine",
+                "ar": "قسنطينة",
+                "postal": "25000",
+                "aliases": [
+                    "constantine",
+                    "cirta"
+                ]
+            },
+            {
+                "code": "25002",
+                "fr": "Aïn Abid",
+                "ar": "عين عبيد",
+                "postal": "25000",
+                "aliases": [
+                    "ain abid"
+                ]
+            },
+            {
+                "code": "25003",
+                "fr": "Aïn Smara",
+                "ar": "عين السمارة",
+                "postal": "25000",
+                "aliases": [
+                    "ain smara"
+                ]
+            },
+            {
+                "code": "25004",
+                "fr": "Beni Hamiden",
+                "ar": "بني حميدان",
+                "postal": "25000",
+                "aliases": [
+                    "beni hamiden"
+                ]
+            },
+            {
+                "code": "25005",
+                "fr": "Didouche Mourad",
+                "ar": "ديدوش مراد",
+                "postal": "25000",
+                "aliases": [
+                    "didouche mourad"
+                ]
+            },
+            {
+                "code": "25006",
+                "fr": "El Khroub",
+                "ar": "الخروب",
+                "postal": "25000",
+                "aliases": [
+                    "el khroub",
+                    "khroub"
+                ]
+            },
+            {
+                "code": "25007",
+                "fr": "Hamma Bouziane",
+                "ar": "حامة بوزيان",
+                "postal": "25000",
+                "aliases": [
+                    "hamma bouziane"
+                ]
+            },
+            {
+                "code": "25008",
+                "fr": "Ibn Badis",
+                "ar": "ابن باديس",
+                "postal": "25000",
+                "aliases": [
+                    "ibn badis"
+                ]
+            },
+            {
+                "code": "25009",
+                "fr": "Ibn Ziad",
+                "ar": "ابن زياد",
+                "postal": "25000",
+                "aliases": [
+                    "ibn ziad"
+                ]
+            },
+            {
+                "code": "25010",
+                "fr": "Messaoud Boudjriou",
+                "ar": "مسعود بوجريو",
+                "postal": "25000",
+                "aliases": [
+                    "messaoud boudjriou"
+                ]
+            },
+            {
+                "code": "25011",
+                "fr": "Ouled Rahmoune",
+                "ar": "أولاد رحمون",
+                "postal": "25000",
+                "aliases": [
+                    "ouled rahmoune"
+                ]
+            },
+            {
+                "code": "25012",
+                "fr": "Zighoud Youcef",
+                "ar": "زيغود يوسف",
+                "postal": "25000",
+                "aliases": [
+                    "zighoud youcef"
+                ]
+            }
+        ]
+    },
+    "31": {
+        "wilaya_code": "31",
+        "wilaya_name": "Oran",
+        "communes": [
+            {
+                "code": "31001",
+                "fr": "Oran",
+                "ar": "وهران",
+                "postal": "31000",
+                "aliases": [
+                    "oran",
+                    "wahran"
+                ]
+            },
+            {
+                "code": "31002",
+                "fr": "Gdyel",
+                "ar": "قديل",
+                "postal": "31000",
+                "aliases": [
+                    "gdyel"
+                ]
+            },
+            {
+                "code": "31003",
+                "fr": "Bir El Djir",
+                "ar": "بئر الجير",
+                "postal": "31000",
+                "aliases": [
+                    "bir el djir"
+                ]
+            },
+            {
+                "code": "31004",
+                "fr": "Hassi Bounif",
+                "ar": "حاسي بونيف",
+                "postal": "31000",
+                "aliases": [
+                    "hassi bounif"
+                ]
+            },
+            {
+                "code": "31005",
+                "fr": "Es Senia",
+                "ar": "السانية",
+                "postal": "31000",
+                "aliases": [
+                    "es senia",
+                    "senia"
+                ]
+            },
+            {
+                "code": "31006",
+                "fr": "Arzew",
+                "ar": "أرزيو",
+                "postal": "31000",
+                "aliases": [
+                    "arzew"
+                ]
+            },
+            {
+                "code": "31007",
+                "fr": "Bethioua",
+                "ar": "بطيوة",
+                "postal": "31000",
+                "aliases": [
+                    "bethioua"
+                ]
+            },
+            {
+                "code": "31008",
+                "fr": "Marsat El Hadjadj",
+                "ar": "مرسى الحجاج",
+                "postal": "31000",
+                "aliases": [
+                    "marsat el hadjadj"
+                ]
+            },
+            {
+                "code": "31009",
+                "fr": "Aïn El Turk",
+                "ar": "عين الترك",
+                "postal": "31000",
+                "aliases": [
+                    "ain el turk"
+                ]
+            },
+            {
+                "code": "31010",
+                "fr": "El Ançor",
+                "ar": "العنصر",
+                "postal": "31000",
+                "aliases": [
+                    "el ancor"
+                ]
+            },
+            {
+                "code": "31011",
+                "fr": "Oued Tlelat",
+                "ar": "وادي تليلات",
+                "postal": "31000",
+                "aliases": [
+                    "oued tlelat"
+                ]
+            },
+            {
+                "code": "31012",
+                "fr": "Tafraoui",
+                "ar": "تفراوي",
+                "postal": "31000",
+                "aliases": [
+                    "tafraoui"
+                ]
+            },
+            {
+                "code": "31013",
+                "fr": "Sidi Chami",
+                "ar": "سيدي الشامي",
+                "postal": "31000",
+                "aliases": [
+                    "sidi chami"
+                ]
+            },
+            {
+                "code": "31014",
+                "fr": "Boufatis",
+                "ar": "بوفاطيس",
+                "postal": "31000",
+                "aliases": [
+                    "boufatis"
+                ]
+            },
+            {
+                "code": "31015",
+                "fr": "El Kerma",
+                "ar": "الكرمة",
+                "postal": "31000",
+                "aliases": [
+                    "el kerma"
+                ]
+            },
+            {
+                "code": "31016",
+                "fr": "El Braya",
+                "ar": "البراية",
+                "postal": "31000",
+                "aliases": [
+                    "el braya"
+                ]
+            },
+            {
+                "code": "31017",
+                "fr": "Hassi Ben Okba",
+                "ar": "حاسي بن عقبة",
+                "postal": "31000",
+                "aliases": [
+                    "hassi ben okba"
+                ]
+            },
+            {
+                "code": "31018",
+                "fr": "Ben Freha",
+                "ar": "بن فريحة",
+                "postal": "31000",
+                "aliases": [
+                    "ben freha"
+                ]
+            },
+            {
+                "code": "31019",
+                "fr": "Hassi Mefsoukh",
+                "ar": "حاسي مفسوخ",
+                "postal": "31000",
+                "aliases": [
+                    "hassi mefsoukh"
+                ]
+            },
+            {
+                "code": "31020",
+                "fr": "Sidi Benyebka",
+                "ar": "سيدي بن يبقى",
+                "postal": "31000",
+                "aliases": [
+                    "sidi benyebka"
+                ]
+            },
+            {
+                "code": "31021",
+                "fr": "Misserghin",
+                "ar": "مسرغين",
+                "postal": "31000",
+                "aliases": [
+                    "misserghin"
+                ]
+            },
+            {
+                "code": "31022",
+                "fr": "Boutlelis",
+                "ar": "بوتليليس",
+                "postal": "31000",
+                "aliases": [
+                    "boutlelis"
+                ]
+            },
+            {
+                "code": "31023",
+                "fr": "Aïn El Kerma",
+                "ar": "عين الكرمة",
+                "postal": "31000",
+                "aliases": [
+                    "ain el kerma"
+                ]
+            },
+            {
+                "code": "31024",
+                "fr": "Aïn El Bia",
+                "ar": "عين البيا",
+                "postal": "31000",
+                "aliases": [
+                    "ain el bia"
+                ]
+            },
+            {
+                "code": "31025",
+                "fr": "Mers El Kébir",
+                "ar": "المرسى الكبير",
+                "postal": "31000",
+                "aliases": [
+                    "mers el kebir"
+                ]
+            },
+            {
+                "code": "31026",
+                "fr": "Bousfer",
+                "ar": "بوصفر",
+                "postal": "31000",
+                "aliases": [
+                    "bousfer"
+                ]
+            }
+        ]
+    },
+    "35": {
+        "wilaya_code": "35",
+        "wilaya_name": "Boumerdès",
+        "communes": [
+            {
+                "code": "35001",
+                "fr": "Boumerdès",
+                "ar": "بومرداس",
+                "postal": "35000",
+                "aliases": [
+                    "boumerdes"
+                ]
+            },
+            {
+                "code": "35002",
+                "fr": "Afir",
+                "ar": "أفير",
+                "postal": "35000",
+                "aliases": [
+                    "afir"
+                ]
+            },
+            {
+                "code": "35003",
+                "fr": "Ammal",
+                "ar": "أعمال",
+                "postal": "35000",
+                "aliases": [
+                    "ammal"
+                ]
+            },
+            {
+                "code": "35004",
+                "fr": "Baghlia",
+                "ar": "بغلية",
+                "postal": "35000",
+                "aliases": [
+                    "baghlia"
+                ]
+            },
+            {
+                "code": "35005",
+                "fr": "Ben Choud",
+                "ar": "بن شود",
+                "postal": "35000",
+                "aliases": [
+                    "ben choud"
+                ]
+            },
+            {
+                "code": "35006",
+                "fr": "Beni Amrane",
+                "ar": "بني عمران",
+                "postal": "35000",
+                "aliases": [
+                    "beni amrane"
+                ]
+            },
+            {
+                "code": "35007",
+                "fr": "Bordj Menaïel",
+                "ar": "برج منايل",
+                "postal": "35000",
+                "aliases": [
+                    "bordj menaiel"
+                ]
+            },
+            {
+                "code": "35008",
+                "fr": "Boudouaou",
+                "ar": "بودواو",
+                "postal": "35000",
+                "aliases": [
+                    "boudouaou"
+                ]
+            },
+            {
+                "code": "35009",
+                "fr": "Boudouaou-El-Bahri",
+                "ar": "بودواو البحري",
+                "postal": "35000",
+                "aliases": [
+                    "boudouaou el bahri"
+                ]
+            },
+            {
+                "code": "35010",
+                "fr": "Bouzegza Keddara",
+                "ar": "بوزقزة قدارة",
+                "postal": "35000",
+                "aliases": [
+                    "bouzegza keddara"
+                ]
+            },
+            {
+                "code": "35011",
+                "fr": "Chabet El Ameur",
+                "ar": "شعبة العامر",
+                "postal": "35000",
+                "aliases": [
+                    "chabet el ameur"
+                ]
+            },
+            {
+                "code": "35012",
+                "fr": "Corso",
+                "ar": "كورسو",
+                "postal": "35000",
+                "aliases": [
+                    "corso"
+                ]
+            },
+            {
+                "code": "35013",
+                "fr": "Dellys",
+                "ar": "دلس",
+                "postal": "35000",
+                "aliases": [
+                    "dellys"
+                ]
+            },
+            {
+                "code": "35014",
+                "fr": "Djinet",
+                "ar": "جنات",
+                "postal": "35000",
+                "aliases": [
+                    "djinet"
+                ]
+            },
+            {
+                "code": "35015",
+                "fr": "El Kharrouba",
+                "ar": "الخروبة",
+                "postal": "35000",
+                "aliases": [
+                    "el kharrouba"
+                ]
+            },
+            {
+                "code": "35016",
+                "fr": "Hammedi",
+                "ar": "حمادي",
+                "postal": "35000",
+                "aliases": [
+                    "hammedi"
+                ]
+            },
+            {
+                "code": "35017",
+                "fr": "Issers",
+                "ar": "الصور",
+                "postal": "35000",
+                "aliases": [
+                    "issers"
+                ]
+            },
+            {
+                "code": "35018",
+                "fr": "Khemis El Khechna",
+                "ar": "خميس الخشنة",
+                "postal": "35000",
+                "aliases": [
+                    "khemis el khechna"
+                ]
+            },
+            {
+                "code": "35019",
+                "fr": "Larbatache",
+                "ar": "الأربعطاش",
+                "postal": "35000",
+                "aliases": [
+                    "larbatache"
+                ]
+            },
+            {
+                "code": "35020",
+                "fr": "Leghata",
+                "ar": "لغاطة",
+                "postal": "35000",
+                "aliases": [
+                    "leghata"
+                ]
+            },
+            {
+                "code": "35021",
+                "fr": "Naciria",
+                "ar": "الناصرية",
+                "postal": "35000",
+                "aliases": [
+                    "naciria"
+                ]
+            },
+            {
+                "code": "35022",
+                "fr": "Ouled Aïssa",
+                "ar": "أولاد عيسى",
+                "postal": "35000",
+                "aliases": [
+                    "ouled aissa"
+                ]
+            },
+            {
+                "code": "35023",
+                "fr": "Ouled Hedadj",
+                "ar": "أولاد هداج",
+                "postal": "35000",
+                "aliases": [
+                    "ouled hedadj"
+                ]
+            },
+            {
+                "code": "35024",
+                "fr": "Ouled Moussa",
+                "ar": "أولاد موسى",
+                "postal": "35000",
+                "aliases": [
+                    "ouled moussa"
+                ]
+            },
+            {
+                "code": "35025",
+                "fr": "Si Mustapha",
+                "ar": "سي مصطفى",
+                "postal": "35000",
+                "aliases": [
+                    "si mustapha"
+                ]
+            },
+            {
+                "code": "35026",
+                "fr": "Sidi Daoud",
+                "ar": "سيدي داود",
+                "postal": "35000",
+                "aliases": [
+                    "sidi daoud"
+                ]
+            },
+            {
+                "code": "35027",
+                "fr": "Souk El Had",
+                "ar": "سوق الحد",
+                "postal": "35000",
+                "aliases": [
+                    "souk el had"
+                ]
+            },
+            {
+                "code": "35028",
+                "fr": "Taourga",
+                "ar": "تاورقة",
+                "postal": "35000",
+                "aliases": [
+                    "taourga"
+                ]
+            },
+            {
+                "code": "35029",
+                "fr": "Thénia",
+                "ar": "ثنية",
+                "postal": "35000",
+                "aliases": [
+                    "thenia"
+                ]
+            },
+            {
+                "code": "35030",
+                "fr": "Tidjelabine",
+                "ar": "تيجلابين",
+                "postal": "35000",
+                "aliases": [
+                    "tidjelabine"
+                ]
+            },
+            {
+                "code": "35031",
+                "fr": "Zemmouri",
+                "ar": "زموري",
+                "postal": "35000",
+                "aliases": [
+                    "zemmouri"
+                ]
+            }
+        ]
+    },
+    "42": {
+        "wilaya_code": "42",
+        "wilaya_name": "Tipaza",
+        "communes": [
+            {
+                "code": "42001",
+                "fr": "Tipaza",
+                "ar": "تيبازة",
+                "postal": "42000",
+                "aliases": [
+                    "tipaza",
+                    "tipasa"
+                ]
+            },
+            {
+                "code": "42002",
+                "fr": "Menaceur",
+                "ar": "مناصر",
+                "postal": "42000",
+                "aliases": [
+                    "menaceur"
+                ]
+            },
+            {
+                "code": "42003",
+                "fr": "Larhat",
+                "ar": "لرحات",
+                "postal": "42000",
+                "aliases": [
+                    "larhat"
+                ]
+            },
+            {
+                "code": "42004",
+                "fr": "Douaouda",
+                "ar": "دواودة",
+                "postal": "42000",
+                "aliases": [
+                    "douaouda"
+                ]
+            },
+            {
+                "code": "42005",
+                "fr": "Bourkika",
+                "ar": "بورقيقة",
+                "postal": "42000",
+                "aliases": [
+                    "bourkika"
+                ]
+            },
+            {
+                "code": "42006",
+                "fr": "Khemisti",
+                "ar": "خميستي",
+                "postal": "42000",
+                "aliases": [
+                    "khemisti"
+                ]
+            },
+            {
+                "code": "42007",
+                "fr": "Aghbal",
+                "ar": "أغبال",
+                "postal": "42000",
+                "aliases": [
+                    "aghbal"
+                ]
+            },
+            {
+                "code": "42008",
+                "fr": "Hadjout",
+                "ar": "حجوط",
+                "postal": "42000",
+                "aliases": [
+                    "hadjout"
+                ]
+            },
+            {
+                "code": "42009",
+                "fr": "Chaïba",
+                "ar": "الشعيبة",
+                "postal": "42000",
+                "aliases": [
+                    "chaiba"
+                ]
+            },
+            {
+                "code": "42010",
+                "fr": "Aïn Tagourait",
+                "ar": "عين تاقورايت",
+                "postal": "42000",
+                "aliases": [
+                    "ain tagourait"
+                ]
+            },
+            {
+                "code": "42011",
+                "fr": "Cherchell",
+                "ar": "شرشال",
+                "postal": "42000",
+                "aliases": [
+                    "cherchell"
+                ]
+            },
+            {
+                "code": "42012",
+                "fr": "Damous",
+                "ar": "ضاموس",
+                "postal": "42000",
+                "aliases": [
+                    "damous"
+                ]
+            },
+            {
+                "code": "42013",
+                "fr": "Merad",
+                "ar": "مراد",
+                "postal": "42000",
+                "aliases": [
+                    "merad"
+                ]
+            },
+            {
+                "code": "42014",
+                "fr": "Fouka",
+                "ar": "فوكة",
+                "postal": "42000",
+                "aliases": [
+                    "fouka"
+                ]
+            },
+            {
+                "code": "42015",
+                "fr": "Bou Ismaïl",
+                "ar": "بو إسماعيل",
+                "postal": "42000",
+                "aliases": [
+                    "bou ismail"
+                ]
+            },
+            {
+                "code": "42016",
+                "fr": "Ahmar El Aïn",
+                "ar": "أحمر العين",
+                "postal": "42000",
+                "aliases": [
+                    "ahmar el ain"
+                ]
+            },
+            {
+                "code": "42017",
+                "fr": "Bouharoun",
+                "ar": "بوهارون",
+                "postal": "42000",
+                "aliases": [
+                    "bouharoun"
+                ]
+            },
+            {
+                "code": "42018",
+                "fr": "Sidi Ghiles",
+                "ar": "سيدي غيلس",
+                "postal": "42000",
+                "aliases": [
+                    "sidi ghiles"
+                ]
+            },
+            {
+                "code": "42019",
+                "fr": "Messelmoun",
+                "ar": "مسلمون",
+                "postal": "42000",
+                "aliases": [
+                    "messelmoun"
+                ]
+            },
+            {
+                "code": "42020",
+                "fr": "Sidi Rached",
+                "ar": "سيدي راشد",
+                "postal": "42000",
+                "aliases": [
+                    "sidi rached"
+                ]
+            },
+            {
+                "code": "42021",
+                "fr": "Koléa",
+                "ar": "القليعة",
+                "postal": "42000",
+                "aliases": [
+                    "kolea"
+                ]
+            },
+            {
+                "code": "42022",
+                "fr": "Attatba",
+                "ar": "حطاطبة",
+                "postal": "42000",
+                "aliases": [
+                    "attatba"
+                ]
+            },
+            {
+                "code": "42023",
+                "fr": "Sidi Semiane",
+                "ar": "سيدي سميان",
+                "postal": "42000",
+                "aliases": [
+                    "sidi semiane"
+                ]
+            },
+            {
+                "code": "42024",
+                "fr": "Beni Milleuk",
+                "ar": "بني ميلك",
+                "postal": "42000",
+                "aliases": [
+                    "beni milleuk"
+                ]
+            },
+            {
+                "code": "42025",
+                "fr": "Hadjeret Ennous",
+                "ar": "حجرة النوس",
+                "postal": "42000",
+                "aliases": [
+                    "hadjeret ennous"
+                ]
+            }
+        ]
+    },
+    "06": {
+        "wilaya_code": "06",
+        "wilaya_name": "Béjaïa",
+        "communes": [
+            {
+                "code": "06001",
+                "fr": "Béjaïa",
+                "ar": "بجاية",
+                "postal": "06000",
+                "aliases": [
+                    "bejaia",
+                    "bougie"
+                ]
+            },
+            {
+                "code": "06002",
+                "fr": "Amizour",
+                "ar": "أميزور",
+                "postal": "06000",
+                "aliases": [
+                    "amizour"
+                ]
+            },
+            {
+                "code": "06003",
+                "fr": "Ferraoun",
+                "ar": "فرعون",
+                "postal": "06000",
+                "aliases": [
+                    "ferraoun"
+                ]
+            },
+            {
+                "code": "06004",
+                "fr": "Taourirt Ighil",
+                "ar": "تاوريرت إيغيل",
+                "postal": "06000",
+                "aliases": [
+                    "taourirt ighil"
+                ]
+            },
+            {
+                "code": "06005",
+                "fr": "Chellata",
+                "ar": "شلاطة",
+                "postal": "06000",
+                "aliases": [
+                    "chellata"
+                ]
+            },
+            {
+                "code": "06006",
+                "fr": "Tamokra",
+                "ar": "تامقرة",
+                "postal": "06000",
+                "aliases": [
+                    "tamokra"
+                ]
+            },
+            {
+                "code": "06007",
+                "fr": "Timezrit",
+                "ar": "تيمزريت",
+                "postal": "06000",
+                "aliases": [
+                    "timezrit"
+                ]
+            },
+            {
+                "code": "06008",
+                "fr": "Souk El Ténine",
+                "ar": "سوق الإثنين",
+                "postal": "06000",
+                "aliases": [
+                    "souk el tenine"
+                ]
+            },
+            {
+                "code": "06009",
+                "fr": "M'cisna",
+                "ar": "مسيسنة",
+                "postal": "06000",
+                "aliases": [
+                    "mcisna"
+                ]
+            },
+            {
+                "code": "06010",
+                "fr": "Tinabdher",
+                "ar": "تينبذر",
+                "postal": "06000",
+                "aliases": [
+                    "tinabdher"
+                ]
+            },
+            {
+                "code": "06011",
+                "fr": "Tichy",
+                "ar": "تيشي",
+                "postal": "06000",
+                "aliases": [
+                    "tichy"
+                ]
+            },
+            {
+                "code": "06012",
+                "fr": "Semaoun",
+                "ar": "سماعون",
+                "postal": "06000",
+                "aliases": [
+                    "semaoun"
+                ]
+            },
+            {
+                "code": "06013",
+                "fr": "Kendira",
+                "ar": "قنديرة",
+                "postal": "06000",
+                "aliases": [
+                    "kendira"
+                ]
+            },
+            {
+                "code": "06014",
+                "fr": "Tifra",
+                "ar": "تيفرة",
+                "postal": "06000",
+                "aliases": [
+                    "tifra"
+                ]
+            },
+            {
+                "code": "06015",
+                "fr": "Ighram",
+                "ar": "إغرام",
+                "postal": "06000",
+                "aliases": [
+                    "ighram"
+                ]
+            },
+            {
+                "code": "06016",
+                "fr": "Amalou",
+                "ar": "أمالو",
+                "postal": "06000",
+                "aliases": [
+                    "amalou"
+                ]
+            },
+            {
+                "code": "06017",
+                "fr": "Ighil Ali",
+                "ar": "إغيل علي",
+                "postal": "06000",
+                "aliases": [
+                    "ighil ali"
+                ]
+            },
+            {
+                "code": "06018",
+                "fr": "Fenaïa Ilmaten",
+                "ar": "فناية إلماطن",
+                "postal": "06000",
+                "aliases": [
+                    "fenaia ilmaten"
+                ]
+            },
+            {
+                "code": "06019",
+                "fr": "Toudja",
+                "ar": "توجة",
+                "postal": "06000",
+                "aliases": [
+                    "toudja"
+                ]
+            },
+            {
+                "code": "06020",
+                "fr": "Darguina",
+                "ar": "درقينة",
+                "postal": "06000",
+                "aliases": [
+                    "darguina"
+                ]
+            },
+            {
+                "code": "06021",
+                "fr": "Sidi-Ayad",
+                "ar": "سيدي عياد",
+                "postal": "06000",
+                "aliases": [
+                    "sidi ayad"
+                ]
+            },
+            {
+                "code": "06022",
+                "fr": "Aokas",
+                "ar": "أوقاس",
+                "postal": "06000",
+                "aliases": [
+                    "aokas"
+                ]
+            },
+            {
+                "code": "06023",
+                "fr": "Beni Djellil",
+                "ar": "بني جليل",
+                "postal": "06000",
+                "aliases": [
+                    "beni djellil"
+                ]
+            },
+            {
+                "code": "06024",
+                "fr": "Adekar",
+                "ar": "أذكار",
+                "postal": "06000",
+                "aliases": [
+                    "adekar"
+                ]
+            },
+            {
+                "code": "06025",
+                "fr": "Akbou",
+                "ar": "أقبو",
+                "postal": "06000",
+                "aliases": [
+                    "akbou"
+                ]
+            },
+            {
+                "code": "06026",
+                "fr": "Seddouk",
+                "ar": "صدوق",
+                "postal": "06000",
+                "aliases": [
+                    "seddouk"
+                ]
+            },
+            {
+                "code": "06027",
+                "fr": "Tazmalt",
+                "ar": "تازمالت",
+                "postal": "06000",
+                "aliases": [
+                    "tazmalt"
+                ]
+            },
+            {
+                "code": "06028",
+                "fr": "Aït-R'zine",
+                "ar": "آيت رزين",
+                "postal": "06000",
+                "aliases": [
+                    "ait rzine"
+                ]
+            },
+            {
+                "code": "06029",
+                "fr": "Chemini",
+                "ar": "شميني",
+                "postal": "06000",
+                "aliases": [
+                    "chemini"
+                ]
+            },
+            {
+                "code": "06030",
+                "fr": "Souk-Oufella",
+                "ar": "سوق أوفلة",
+                "postal": "06000",
+                "aliases": [
+                    "souk oufella"
+                ]
+            },
+            {
+                "code": "06031",
+                "fr": "Taskriout",
+                "ar": "تاسكريوت",
+                "postal": "06000",
+                "aliases": [
+                    "taskriout"
+                ]
+            },
+            {
+                "code": "06032",
+                "fr": "Tibane",
+                "ar": "طيبان",
+                "postal": "06000",
+                "aliases": [
+                    "tibane"
+                ]
+            },
+            {
+                "code": "06033",
+                "fr": "Tala Hamza",
+                "ar": "تالة حمزة",
+                "postal": "06000",
+                "aliases": [
+                    "tala hamza"
+                ]
+            },
+            {
+                "code": "06034",
+                "fr": "Barbacha",
+                "ar": "برباشة",
+                "postal": "06000",
+                "aliases": [
+                    "barbacha"
+                ]
+            },
+            {
+                "code": "06035",
+                "fr": "Beni Ksila",
+                "ar": "بني كسيلة",
+                "postal": "06000",
+                "aliases": [
+                    "beni ksila"
+                ]
+            },
+            {
+                "code": "06036",
+                "fr": "Ouzellaguen",
+                "ar": "أوزلاقن",
+                "postal": "06000",
+                "aliases": [
+                    "ouzellaguen"
+                ]
+            },
+            {
+                "code": "06037",
+                "fr": "Bouhamza",
+                "ar": "بوحمزة",
+                "postal": "06000",
+                "aliases": [
+                    "bouhamza"
+                ]
+            },
+            {
+                "code": "06038",
+                "fr": "Aït Mellikeche",
+                "ar": "آيت مليكش",
+                "postal": "06000",
+                "aliases": [
+                    "ait mellikeche"
+                ]
+            },
+            {
+                "code": "06039",
+                "fr": "Sidi-Aïch",
+                "ar": "سيدي عيش",
+                "postal": "06000",
+                "aliases": [
+                    "sidi aich"
+                ]
+            },
+            {
+                "code": "06040",
+                "fr": "El Kseur",
+                "ar": "القصر",
+                "postal": "06000",
+                "aliases": [
+                    "el kseur"
+                ]
+            },
+            {
+                "code": "06041",
+                "fr": "Melbou",
+                "ar": "ملبو",
+                "postal": "06000",
+                "aliases": [
+                    "melbou"
+                ]
+            },
+            {
+                "code": "06042",
+                "fr": "Akfadou",
+                "ar": "أكفادو",
+                "postal": "06000",
+                "aliases": [
+                    "akfadou"
+                ]
+            },
+            {
+                "code": "06043",
+                "fr": "Leflaye",
+                "ar": "لفلاي",
+                "postal": "06000",
+                "aliases": [
+                    "leflaye"
+                ]
+            },
+            {
+                "code": "06044",
+                "fr": "Kherrata",
+                "ar": "خراطة",
+                "postal": "06000",
+                "aliases": [
+                    "kherrata"
+                ]
+            },
+            {
+                "code": "06045",
+                "fr": "Draâ El-Kaïd",
+                "ar": "ذراع القايد",
+                "postal": "06000",
+                "aliases": [
+                    "draa el kaid"
+                ]
+            },
+            {
+                "code": "06046",
+                "fr": "Tamridjet",
+                "ar": "تامريجت",
+                "postal": "06000",
+                "aliases": [
+                    "tamridjet"
+                ]
+            },
+            {
+                "code": "06047",
+                "fr": "Aït-Smail",
+                "ar": "آيت سماعيل",
+                "postal": "06000",
+                "aliases": [
+                    "ait smail"
+                ]
+            },
+            {
+                "code": "06048",
+                "fr": "Boukhelifa",
+                "ar": "بوخليفة",
+                "postal": "06000",
+                "aliases": [
+                    "boukhelifa"
+                ]
+            },
+            {
+                "code": "06049",
+                "fr": "Tizi N'Berber",
+                "ar": "تيزي نبربر",
+                "postal": "06000",
+                "aliases": [
+                    "tizi nberber"
+                ]
+            },
+            {
+                "code": "06050",
+                "fr": "Aït Maouche",
+                "ar": "آيت ماوش",
+                "postal": "06000",
+                "aliases": [
+                    "ait maouche"
+                ]
+            },
+            {
+                "code": "06051",
+                "fr": "Oued Ghir",
+                "ar": "واد غير",
+                "postal": "06000",
+                "aliases": [
+                    "oued ghir"
+                ]
+            },
+            {
+                "code": "06052",
+                "fr": "Boudjellil",
+                "ar": "بوجليل",
+                "postal": "06000",
+                "aliases": [
+                    "boudjellil"
+                ]
+            }
+        ]
+    },
+    "13": {
+        "wilaya_code": "13",
+        "wilaya_name": "Tlemcen",
+        "communes": [
+            {
+                "code": "13001",
+                "fr": "Tlemcen",
+                "ar": "تلمسان",
+                "postal": "13000",
+                "aliases": [
+                    "tlemcen"
+                ]
+            },
+            {
+                "code": "13002",
+                "fr": "Beni Mester",
+                "ar": "بني مستار",
+                "postal": "13000",
+                "aliases": [
+                    "beni mester"
+                ]
+            },
+            {
+                "code": "13003",
+                "fr": "Aïn Tallout",
+                "ar": "عين تالوت",
+                "postal": "13000",
+                "aliases": [
+                    "ain tallout"
+                ]
+            },
+            {
+                "code": "13004",
+                "fr": "Remchi",
+                "ar": "الرمشي",
+                "postal": "13000",
+                "aliases": [
+                    "remchi"
+                ]
+            },
+            {
+                "code": "13005",
+                "fr": "El Fehoul",
+                "ar": "الفحول",
+                "postal": "13000",
+                "aliases": [
+                    "el fehoul"
+                ]
+            },
+            {
+                "code": "13006",
+                "fr": "Sabra",
+                "ar": "صبرة",
+                "postal": "13000",
+                "aliases": [
+                    "sabra"
+                ]
+            },
+            {
+                "code": "13007",
+                "fr": "Ghazaouet",
+                "ar": "الغزوات",
+                "postal": "13000",
+                "aliases": [
+                    "ghazaouet"
+                ]
+            },
+            {
+                "code": "13008",
+                "fr": "Souani",
+                "ar": "السواني",
+                "postal": "13000",
+                "aliases": [
+                    "souani"
+                ]
+            },
+            {
+                "code": "13009",
+                "fr": "Djebala",
+                "ar": "جبالة",
+                "postal": "13000",
+                "aliases": [
+                    "djebala"
+                ]
+            },
+            {
+                "code": "13010",
+                "fr": "El Gor",
+                "ar": "القور",
+                "postal": "13000",
+                "aliases": [
+                    "el gor"
+                ]
+            },
+            {
+                "code": "13011",
+                "fr": "Oued Lakhdar",
+                "ar": "واد لخضر",
+                "postal": "13000",
+                "aliases": [
+                    "oued lakhdar"
+                ]
+            },
+            {
+                "code": "13012",
+                "fr": "Aïn Fezza",
+                "ar": "عين فزة",
+                "postal": "13000",
+                "aliases": [
+                    "ain fezza"
+                ]
+            },
+            {
+                "code": "13013",
+                "fr": "Ouled Mimoun",
+                "ar": "أولاد ميمون",
+                "postal": "13000",
+                "aliases": [
+                    "ouled mimoun"
+                ]
+            },
+            {
+                "code": "13014",
+                "fr": "Amieur",
+                "ar": "العمير",
+                "postal": "13000",
+                "aliases": [
+                    "amieur"
+                ]
+            },
+            {
+                "code": "13015",
+                "fr": "Aïn Youcef",
+                "ar": "عين يوسف",
+                "postal": "13000",
+                "aliases": [
+                    "ain youcef"
+                ]
+            },
+            {
+                "code": "13016",
+                "fr": "Zenata",
+                "ar": "زناتة",
+                "postal": "13000",
+                "aliases": [
+                    "zenata"
+                ]
+            },
+            {
+                "code": "13017",
+                "fr": "Beni Snous",
+                "ar": "بني سنوس",
+                "postal": "13000",
+                "aliases": [
+                    "beni snous"
+                ]
+            },
+            {
+                "code": "13018",
+                "fr": "Bab El Assa",
+                "ar": "باب العسة",
+                "postal": "13000",
+                "aliases": [
+                    "bab el assa"
+                ]
+            },
+            {
+                "code": "13019",
+                "fr": "Dar Yaghmouracene",
+                "ar": "دار يغمراسن",
+                "postal": "13000",
+                "aliases": [
+                    "dar yaghmouracene"
+                ]
+            },
+            {
+                "code": "13020",
+                "fr": "Fellaoucene",
+                "ar": "فلاوسن",
+                "postal": "13000",
+                "aliases": [
+                    "fellaoucene"
+                ]
+            },
+            {
+                "code": "13021",
+                "fr": "Azails",
+                "ar": "أزايل",
+                "postal": "13000",
+                "aliases": [
+                    "azails"
+                ]
+            },
+            {
+                "code": "13022",
+                "fr": "Sebaa Chioukh",
+                "ar": "سبع شيوخ",
+                "postal": "13000",
+                "aliases": [
+                    "sebaa chioukh"
+                ]
+            },
+            {
+                "code": "13023",
+                "fr": "Terny Beni Hdiel",
+                "ar": "ترني بني هديل",
+                "postal": "13000",
+                "aliases": [
+                    "terny beni hdiel"
+                ]
+            },
+            {
+                "code": "13024",
+                "fr": "Bensekrane",
+                "ar": "بن سكران",
+                "postal": "13000",
+                "aliases": [
+                    "bensekrane"
+                ]
+            },
+            {
+                "code": "13025",
+                "fr": "Aïn Nehala",
+                "ar": "عين نحالة",
+                "postal": "13000",
+                "aliases": [
+                    "ain nehala"
+                ]
+            },
+            {
+                "code": "13026",
+                "fr": "Hennaya",
+                "ar": "هنين",
+                "postal": "13000",
+                "aliases": [
+                    "hennaya"
+                ]
+            },
+            {
+                "code": "13027",
+                "fr": "Maghnia",
+                "ar": "مغنية",
+                "postal": "13000",
+                "aliases": [
+                    "maghnia"
+                ]
+            },
+            {
+                "code": "13028",
+                "fr": "Hammam Boughrara",
+                "ar": "حمام بوغرارة",
+                "postal": "13000",
+                "aliases": [
+                    "hammam boughrara"
+                ]
+            },
+            {
+                "code": "13029",
+                "fr": "Souahlia",
+                "ar": "السواحلية",
+                "postal": "13000",
+                "aliases": [
+                    "souahlia"
+                ]
+            },
+            {
+                "code": "13030",
+                "fr": "MSirda Fouaga",
+                "ar": "مسيردة الفواقة",
+                "postal": "13000",
+                "aliases": [
+                    "msirda fouaga"
+                ]
+            },
+            {
+                "code": "13031",
+                "fr": "Aïn Fetah",
+                "ar": "عين فتاح",
+                "postal": "13000",
+                "aliases": [
+                    "ain fetah"
+                ]
+            },
+            {
+                "code": "13032",
+                "fr": "El Aricha",
+                "ar": "العريشة",
+                "postal": "13000",
+                "aliases": [
+                    "el aricha"
+                ]
+            },
+            {
+                "code": "13033",
+                "fr": "Souk Tlata",
+                "ar": "سوق الثلاثاء",
+                "postal": "13000",
+                "aliases": [
+                    "souk tlata"
+                ]
+            },
+            {
+                "code": "13034",
+                "fr": "Sidi Abdelli",
+                "ar": "سيدي عبدلي",
+                "postal": "13000",
+                "aliases": [
+                    "sidi abdelli"
+                ]
+            },
+            {
+                "code": "13035",
+                "fr": "Sebdou",
+                "ar": "سبدو",
+                "postal": "13000",
+                "aliases": [
+                    "sebdou"
+                ]
+            },
+            {
+                "code": "13036",
+                "fr": "Beni Ouarsous",
+                "ar": "بني ورسوس",
+                "postal": "13000",
+                "aliases": [
+                    "beni ouarsous"
+                ]
+            },
+            {
+                "code": "13037",
+                "fr": "Sidi Medjahed",
+                "ar": "سيدي مجاهد",
+                "postal": "13000",
+                "aliases": [
+                    "sidi medjahed"
+                ]
+            },
+            {
+                "code": "13038",
+                "fr": "Beni Boussaid",
+                "ar": "بني بوسعيد",
+                "postal": "13000",
+                "aliases": [
+                    "beni boussaid"
+                ]
+            },
+            {
+                "code": "13039",
+                "fr": "Marsa Ben M'Hidi",
+                "ar": "مرسى بن مهيدي",
+                "postal": "13000",
+                "aliases": [
+                    "marsa ben mhidi"
+                ]
+            },
+            {
+                "code": "13040",
+                "fr": "Nedroma",
+                "ar": "ندرومة",
+                "postal": "13000",
+                "aliases": [
+                    "nedroma"
+                ]
+            },
+            {
+                "code": "13041",
+                "fr": "Sidi Djillali",
+                "ar": "سيدي الجيلالي",
+                "postal": "13000",
+                "aliases": [
+                    "sidi djillali"
+                ]
+            },
+            {
+                "code": "13042",
+                "fr": "Beni Bahdel",
+                "ar": "بني بهدل",
+                "postal": "13000",
+                "aliases": [
+                    "beni bahdel"
+                ]
+            },
+            {
+                "code": "13043",
+                "fr": "El Bouihi",
+                "ar": "البويهي",
+                "postal": "13000",
+                "aliases": [
+                    "el bouihi"
+                ]
+            },
+            {
+                "code": "13044",
+                "fr": "Honaïne",
+                "ar": "هنين",
+                "postal": "13000",
+                "aliases": [
+                    "honaine"
+                ]
+            },
+            {
+                "code": "13045",
+                "fr": "Tienet",
+                "ar": "تيانت",
+                "postal": "13000",
+                "aliases": [
+                    "tienet"
+                ]
+            },
+            {
+                "code": "13046",
+                "fr": "Ouled Riyah",
+                "ar": "أولاد رياح",
+                "postal": "13000",
+                "aliases": [
+                    "ouled riyah"
+                ]
+            },
+            {
+                "code": "13047",
+                "fr": "Bouhlou",
+                "ar": "بوحلو",
+                "postal": "13000",
+                "aliases": [
+                    "bouhlou"
+                ]
+            },
+            {
+                "code": "13048",
+                "fr": "Beni Khellad",
+                "ar": "بني خلاد",
+                "postal": "13000",
+                "aliases": [
+                    "beni khellad"
+                ]
+            },
+            {
+                "code": "13049",
+                "fr": "Aïn Ghoraba",
+                "ar": "عين غرابة",
+                "postal": "13000",
+                "aliases": [
+                    "ain ghoraba"
+                ]
+            },
+            {
+                "code": "13050",
+                "fr": "Chetouane",
+                "ar": "شتوان",
+                "postal": "13000",
+                "aliases": [
+                    "chetouane"
+                ]
+            },
+            {
+                "code": "13051",
+                "fr": "Mansourah",
+                "ar": "المنصورة",
+                "postal": "13000",
+                "aliases": [
+                    "mansourah"
+                ]
+            },
+            {
+                "code": "13052",
+                "fr": "Beni Semiel",
+                "ar": "بني سميال",
+                "postal": "13000",
+                "aliases": [
+                    "beni semiel"
+                ]
+            },
+            {
+                "code": "13053",
+                "fr": "Aïn Kebira",
+                "ar": "عين الكبيرة",
+                "postal": "13000",
+                "aliases": [
+                    "ain kebira"
+                ]
+            }
+        ]
+    },
+    "15": {
+        "wilaya_code": "15",
+        "wilaya_name": "Tizi Ouzou",
+        "communes": [
+            {
+                "code": "15001",
+                "fr": "Tizi Ouzou",
+                "ar": "تيزي وزو",
+                "postal": "15000",
+                "aliases": [
+                    "tizi ouzou",
+                    "tizi-ouzou"
+                ]
+            },
+            {
+                "code": "15002",
+                "fr": "Aïn El Hammam",
+                "ar": "عين الحمام",
+                "postal": "15000",
+                "aliases": [
+                    "ain el hammam"
+                ]
+            },
+            {
+                "code": "15003",
+                "fr": "Akbil",
+                "ar": "أقبيل",
+                "postal": "15000",
+                "aliases": [
+                    "akbil"
+                ]
+            },
+            {
+                "code": "15004",
+                "fr": "Freha",
+                "ar": "فريحة",
+                "postal": "15000",
+                "aliases": [
+                    "freha"
+                ]
+            },
+            {
+                "code": "15005",
+                "fr": "Souamaâ",
+                "ar": "السوماعة",
+                "postal": "15000",
+                "aliases": [
+                    "souamaa"
+                ]
+            },
+            {
+                "code": "15006",
+                "fr": "Mechtras",
+                "ar": "مشطراس",
+                "postal": "15000",
+                "aliases": [
+                    "mechtras"
+                ]
+            },
+            {
+                "code": "15007",
+                "fr": "Irdjen",
+                "ar": "إرجن",
+                "postal": "15000",
+                "aliases": [
+                    "irdjen"
+                ]
+            },
+            {
+                "code": "15008",
+                "fr": "Timizart",
+                "ar": "تيميزارت",
+                "postal": "15000",
+                "aliases": [
+                    "timizart"
+                ]
+            },
+            {
+                "code": "15009",
+                "fr": "Makouda",
+                "ar": "ماكودة",
+                "postal": "15000",
+                "aliases": [
+                    "makouda"
+                ]
+            },
+            {
+                "code": "15010",
+                "fr": "Draâ El Mizan",
+                "ar": "ذراع الميزان",
+                "postal": "15000",
+                "aliases": [
+                    "draa el mizan"
+                ]
+            },
+            {
+                "code": "15011",
+                "fr": "Tizi Gheniff",
+                "ar": "تيزي غنيف",
+                "postal": "15000",
+                "aliases": [
+                    "tizi gheniff"
+                ]
+            },
+            {
+                "code": "15012",
+                "fr": "Bounouh",
+                "ar": "بونوح",
+                "postal": "15000",
+                "aliases": [
+                    "bounouh"
+                ]
+            },
+            {
+                "code": "15013",
+                "fr": "Aït Chafâa",
+                "ar": "آيت شفاعة",
+                "postal": "15000",
+                "aliases": [
+                    "ait chafaa"
+                ]
+            },
+            {
+                "code": "15014",
+                "fr": "Frikat",
+                "ar": "فريقات",
+                "postal": "15000",
+                "aliases": [
+                    "frikat"
+                ]
+            },
+            {
+                "code": "15015",
+                "fr": "Beni Aïssi",
+                "ar": "بني عيسي",
+                "postal": "15000",
+                "aliases": [
+                    "beni aissi"
+                ]
+            },
+            {
+                "code": "15016",
+                "fr": "Aït Zmenzer",
+                "ar": "آيت زمنزر",
+                "postal": "15000",
+                "aliases": [
+                    "ait zmenzer"
+                ]
+            },
+            {
+                "code": "15017",
+                "fr": "Iferhounène",
+                "ar": "إفرحونن",
+                "postal": "15000",
+                "aliases": [
+                    "iferhounene"
+                ]
+            },
+            {
+                "code": "15018",
+                "fr": "Azazga",
+                "ar": "عزازقة",
+                "postal": "15000",
+                "aliases": [
+                    "azazga"
+                ]
+            },
+            {
+                "code": "15019",
+                "fr": "Illoula Oumalou",
+                "ar": "إيلولة أومالو",
+                "postal": "15000",
+                "aliases": [
+                    "illoula oumalou"
+                ]
+            },
+            {
+                "code": "15020",
+                "fr": "Yakouren",
+                "ar": "ياكورن",
+                "postal": "15000",
+                "aliases": [
+                    "yakouren"
+                ]
+            },
+            {
+                "code": "15021",
+                "fr": "Larbaâ Nath Irathen",
+                "ar": "لاربعاء ناث إيراثن",
+                "postal": "15000",
+                "aliases": [
+                    "larbaa nath irathen"
+                ]
+            },
+            {
+                "code": "15022",
+                "fr": "Tizi Rached",
+                "ar": "تيزي راشد",
+                "postal": "15000",
+                "aliases": [
+                    "tizi rached"
+                ]
+            },
+            {
+                "code": "15023",
+                "fr": "Zekri",
+                "ar": "زكري",
+                "postal": "15000",
+                "aliases": [
+                    "zekri"
+                ]
+            },
+            {
+                "code": "15024",
+                "fr": "Ouaguenoun",
+                "ar": "واقنون",
+                "postal": "15000",
+                "aliases": [
+                    "ouaguenoun"
+                ]
+            },
+            {
+                "code": "15025",
+                "fr": "Aïn Zaouia",
+                "ar": "عين الزاوية",
+                "postal": "15000",
+                "aliases": [
+                    "ain zaouia"
+                ]
+            },
+            {
+                "code": "15026",
+                "fr": "Mâatkas",
+                "ar": "معاتقة",
+                "postal": "15000",
+                "aliases": [
+                    "maatkas"
+                ]
+            },
+            {
+                "code": "15027",
+                "fr": "Abi Youcef",
+                "ar": "أبي يوسف",
+                "postal": "15000",
+                "aliases": [
+                    "abi youcef"
+                ]
+            },
+            {
+                "code": "15028",
+                "fr": "Beni Douala",
+                "ar": "بني دوالة",
+                "postal": "15000",
+                "aliases": [
+                    "beni douala"
+                ]
+            },
+            {
+                "code": "15029",
+                "fr": "Bouzeguène",
+                "ar": "بوزقن",
+                "postal": "15000",
+                "aliases": [
+                    "bouzeguene"
+                ]
+            },
+            {
+                "code": "15030",
+                "fr": "Ouadhia",
+                "ar": "واضية",
+                "postal": "15000",
+                "aliases": [
+                    "ouadhia"
+                ]
+            },
+            {
+                "code": "15031",
+                "fr": "Azeffoun",
+                "ar": "أزفون",
+                "postal": "15000",
+                "aliases": [
+                    "azeffoun"
+                ]
+            },
+            {
+                "code": "15032",
+                "fr": "Tigzirt",
+                "ar": "تيقزيرت",
+                "postal": "15000",
+                "aliases": [
+                    "tigzirt"
+                ]
+            },
+            {
+                "code": "15033",
+                "fr": "Aït Aïssa Mimoun",
+                "ar": "آيت عيسى ميمون",
+                "postal": "15000",
+                "aliases": [
+                    "ait aissa mimoun"
+                ]
+            },
+            {
+                "code": "15034",
+                "fr": "Boghni",
+                "ar": "بوغني",
+                "postal": "15000",
+                "aliases": [
+                    "boghni"
+                ]
+            },
+            {
+                "code": "15035",
+                "fr": "Ifigha",
+                "ar": "إفيغاء",
+                "postal": "15000",
+                "aliases": [
+                    "ifigha"
+                ]
+            },
+            {
+                "code": "15036",
+                "fr": "Draâ Ben Khedda",
+                "ar": "ذراع بن خدة",
+                "postal": "15000",
+                "aliases": [
+                    "draa ben khedda"
+                ]
+            },
+            {
+                "code": "15037",
+                "fr": "Mekla",
+                "ar": "مكلة",
+                "postal": "15000",
+                "aliases": [
+                    "mekla"
+                ]
+            },
+            {
+                "code": "15038",
+                "fr": "Aït Yenni",
+                "ar": "آيت يني",
+                "postal": "15000",
+                "aliases": [
+                    "ait yenni"
+                ]
+            },
+            {
+                "code": "15039",
+                "fr": "Aghribs",
+                "ar": "أغريب",
+                "postal": "15000",
+                "aliases": [
+                    "aghribs"
+                ]
+            },
+            {
+                "code": "15040",
+                "fr": "Iflissen",
+                "ar": "إفليسن",
+                "postal": "15000",
+                "aliases": [
+                    "iflissen"
+                ]
+            },
+            {
+                "code": "15041",
+                "fr": "Boudjima",
+                "ar": "بوجيمة",
+                "postal": "15000",
+                "aliases": [
+                    "boudjima"
+                ]
+            },
+            {
+                "code": "15042",
+                "fr": "Aït Yahia Moussa",
+                "ar": "آيت يحيى موسى",
+                "postal": "15000",
+                "aliases": [
+                    "ait yahia moussa"
+                ]
+            },
+            {
+                "code": "15043",
+                "fr": "Souk El Thenine",
+                "ar": "سوق الإثنين",
+                "postal": "15000",
+                "aliases": [
+                    "souk el thenine"
+                ]
+            },
+            {
+                "code": "15044",
+                "fr": "Sidi Namane",
+                "ar": "سيدي نعمان",
+                "postal": "15000",
+                "aliases": [
+                    "sidi namane"
+                ]
+            },
+            {
+                "code": "15045",
+                "fr": "Mizrana",
+                "ar": "مزرانة",
+                "postal": "15000",
+                "aliases": [
+                    "mizrana"
+                ]
+            },
+            {
+                "code": "15046",
+                "fr": "Tadmaït",
+                "ar": "تادمايت",
+                "postal": "15000",
+                "aliases": [
+                    "tadmait"
+                ]
+            }
+        ]
+    },
+    "19": {
+        "wilaya_code": "19",
+        "wilaya_name": "Sétif",
+        "communes": [
+            {
+                "code": "19001",
+                "fr": "Sétif",
+                "ar": "سطيف",
+                "postal": "19000",
+                "aliases": [
+                    "setif"
+                ]
+            },
+            {
+                "code": "19002",
+                "fr": "Aïn Abessa",
+                "ar": "عين عباسة",
+                "postal": "19000",
+                "aliases": [
+                    "ain abessa"
+                ]
+            },
+            {
+                "code": "19003",
+                "fr": "Aïn Arnat",
+                "ar": "عين أرنات",
+                "postal": "19000",
+                "aliases": [
+                    "ain arnat"
+                ]
+            },
+            {
+                "code": "19004",
+                "fr": "Aïn Azal",
+                "ar": "عين آزال",
+                "postal": "19000",
+                "aliases": [
+                    "ain azal"
+                ]
+            },
+            {
+                "code": "19005",
+                "fr": "Aïn El Kebira",
+                "ar": "عين الكبيرة",
+                "postal": "19000",
+                "aliases": [
+                    "ain el kebira"
+                ]
+            },
+            {
+                "code": "19006",
+                "fr": "Aïn Lahdjar",
+                "ar": "عين الحجر",
+                "postal": "19000",
+                "aliases": [
+                    "ain lahdjar"
+                ]
+            },
+            {
+                "code": "19007",
+                "fr": "Aïn Legradj",
+                "ar": "عين لقراج",
+                "postal": "19000",
+                "aliases": [
+                    "ain legradj"
+                ]
+            },
+            {
+                "code": "19008",
+                "fr": "Aïn Oulmene",
+                "ar": "عين ولمان",
+                "postal": "19000",
+                "aliases": [
+                    "ain oulmene"
+                ]
+            },
+            {
+                "code": "19009",
+                "fr": "Aïn Roua",
+                "ar": "عين الروى",
+                "postal": "19000",
+                "aliases": [
+                    "ain roua"
+                ]
+            },
+            {
+                "code": "19010",
+                "fr": "Aïn Sebt",
+                "ar": "عين السبت",
+                "postal": "19000",
+                "aliases": [
+                    "ain sebt"
+                ]
+            },
+            {
+                "code": "19011",
+                "fr": "Aït Naoual Mezada",
+                "ar": "آيت نوال مزادة",
+                "postal": "19000",
+                "aliases": [
+                    "ait naoual mezada"
+                ]
+            },
+            {
+                "code": "19012",
+                "fr": "Aït Tizi",
+                "ar": "آيت تيزي",
+                "postal": "19000",
+                "aliases": [
+                    "ait tizi"
+                ]
+            },
+            {
+                "code": "19013",
+                "fr": "Amoucha",
+                "ar": "عموشة",
+                "postal": "19000",
+                "aliases": [
+                    "amoucha"
+                ]
+            },
+            {
+                "code": "19014",
+                "fr": "Babor",
+                "ar": "بابور",
+                "postal": "19000",
+                "aliases": [
+                    "babor"
+                ]
+            },
+            {
+                "code": "19015",
+                "fr": "Bazer Sakhra",
+                "ar": "بازر صخرة",
+                "postal": "19000",
+                "aliases": [
+                    "bazer sakhra"
+                ]
+            },
+            {
+                "code": "19016",
+                "fr": "Beidha Bordj",
+                "ar": "البيضاء برج",
+                "postal": "19000",
+                "aliases": [
+                    "beidha bordj"
+                ]
+            },
+            {
+                "code": "19017",
+                "fr": "Bellaa",
+                "ar": "بلعاء",
+                "postal": "19000",
+                "aliases": [
+                    "bellaa"
+                ]
+            },
+            {
+                "code": "19018",
+                "fr": "Beni Aziz",
+                "ar": "بني عزيز",
+                "postal": "19000",
+                "aliases": [
+                    "beni aziz"
+                ]
+            },
+            {
+                "code": "19019",
+                "fr": "Beni Chebana",
+                "ar": "بني شبانة",
+                "postal": "19000",
+                "aliases": [
+                    "beni chebana"
+                ]
+            },
+            {
+                "code": "19020",
+                "fr": "Beni Fouda",
+                "ar": "بني فودة",
+                "postal": "19000",
+                "aliases": [
+                    "beni fouda"
+                ]
+            },
+            {
+                "code": "19021",
+                "fr": "Beni Hocine",
+                "ar": "بني حسين",
+                "postal": "19000",
+                "aliases": [
+                    "beni hocine"
+                ]
+            },
+            {
+                "code": "19022",
+                "fr": "Beni Ouartilene",
+                "ar": "بني ورتيلان",
+                "postal": "19000",
+                "aliases": [
+                    "beni ouartilene"
+                ]
+            },
+            {
+                "code": "19023",
+                "fr": "Bir El Arch",
+                "ar": "بئر العرش",
+                "postal": "19000",
+                "aliases": [
+                    "bir el arch"
+                ]
+            },
+            {
+                "code": "19024",
+                "fr": "Bir Haddada",
+                "ar": "بئر حدادة",
+                "postal": "19000",
+                "aliases": [
+                    "bir haddada"
+                ]
+            },
+            {
+                "code": "19025",
+                "fr": "Bouandas",
+                "ar": "بوعنداس",
+                "postal": "19000",
+                "aliases": [
+                    "bouandas"
+                ]
+            },
+            {
+                "code": "19026",
+                "fr": "Bougaa",
+                "ar": "بوقاعة",
+                "postal": "19000",
+                "aliases": [
+                    "bougaa"
+                ]
+            },
+            {
+                "code": "19027",
+                "fr": "Bousselam",
+                "ar": "بوسلام",
+                "postal": "19000",
+                "aliases": [
+                    "bousselam"
+                ]
+            },
+            {
+                "code": "19028",
+                "fr": "Boutaleb",
+                "ar": "بوطالب",
+                "postal": "19000",
+                "aliases": [
+                    "boutaleb"
+                ]
+            },
+            {
+                "code": "19029",
+                "fr": "Dehamcha",
+                "ar": "الدهامشة",
+                "postal": "19000",
+                "aliases": [
+                    "dehamcha"
+                ]
+            },
+            {
+                "code": "19030",
+                "fr": "Djemila",
+                "ar": "جميلة",
+                "postal": "19000",
+                "aliases": [
+                    "djemila"
+                ]
+            },
+            {
+                "code": "19031",
+                "fr": "Draa Kebila",
+                "ar": "ذراع قبيلة",
+                "postal": "19000",
+                "aliases": [
+                    "draa kebila"
+                ]
+            },
+            {
+                "code": "19032",
+                "fr": "El Eulma",
+                "ar": "العلمة",
+                "postal": "19000",
+                "aliases": [
+                    "el eulma"
+                ]
+            },
+            {
+                "code": "19033",
+                "fr": "El Ouldja",
+                "ar": "الولجة",
+                "postal": "19000",
+                "aliases": [
+                    "el ouldja"
+                ]
+            },
+            {
+                "code": "19034",
+                "fr": "El Ouricia",
+                "ar": "الأوريسية",
+                "postal": "19000",
+                "aliases": [
+                    "el ouricia"
+                ]
+            },
+            {
+                "code": "19035",
+                "fr": "Guellal",
+                "ar": "قلال",
+                "postal": "19000",
+                "aliases": [
+                    "guellal"
+                ]
+            },
+            {
+                "code": "19036",
+                "fr": "Guelta Zerka",
+                "ar": "قلتة زرقاء",
+                "postal": "19000",
+                "aliases": [
+                    "guelta zerka"
+                ]
+            },
+            {
+                "code": "19037",
+                "fr": "Guenzet",
+                "ar": "قنزات",
+                "postal": "19000",
+                "aliases": [
+                    "guenzet"
+                ]
+            },
+            {
+                "code": "19038",
+                "fr": "Guidjel",
+                "ar": "قجال",
+                "postal": "19000",
+                "aliases": [
+                    "guidjel"
+                ]
+            },
+            {
+                "code": "19039",
+                "fr": "Hamma",
+                "ar": "الحامة",
+                "postal": "19000",
+                "aliases": [
+                    "hamma"
+                ]
+            },
+            {
+                "code": "19040",
+                "fr": "Hammam Guergour",
+                "ar": "حمام قرقور",
+                "postal": "19000",
+                "aliases": [
+                    "hammam guergour"
+                ]
+            },
+            {
+                "code": "19041",
+                "fr": "Hammam Soukhna",
+                "ar": "حمام السخنة",
+                "postal": "19000",
+                "aliases": [
+                    "hammam soukhna"
+                ]
+            },
+            {
+                "code": "19042",
+                "fr": "Harbil",
+                "ar": "حربيل",
+                "postal": "19000",
+                "aliases": [
+                    "harbil"
+                ]
+            },
+            {
+                "code": "19043",
+                "fr": "Ksar El Abtal",
+                "ar": "قصر الأبطال",
+                "postal": "19000",
+                "aliases": [
+                    "ksar el abtal"
+                ]
+            },
+            {
+                "code": "19044",
+                "fr": "Maoklane",
+                "ar": "ماوكلان",
+                "postal": "19000",
+                "aliases": [
+                    "maoklane"
+                ]
+            },
+            {
+                "code": "19045",
+                "fr": "Mezloug",
+                "ar": "مزلوق",
+                "postal": "19000",
+                "aliases": [
+                    "mezloug"
+                ]
+            },
+            {
+                "code": "19046",
+                "fr": "Oued El Barad",
+                "ar": "واد البارد",
+                "postal": "19000",
+                "aliases": [
+                    "oued el barad"
+                ]
+            },
+            {
+                "code": "19047",
+                "fr": "Ouled Addouane",
+                "ar": "أولاد عدوان",
+                "postal": "19000",
+                "aliases": [
+                    "ouled addouane"
+                ]
+            },
+            {
+                "code": "19048",
+                "fr": "Ouled Sabor",
+                "ar": "أولاد صابر",
+                "postal": "19000",
+                "aliases": [
+                    "ouled sabor"
+                ]
+            },
+            {
+                "code": "19049",
+                "fr": "Ouled Tebben",
+                "ar": "أولاد تبان",
+                "postal": "19000",
+                "aliases": [
+                    "ouled tebben"
+                ]
+            },
+            {
+                "code": "19050",
+                "fr": "Rasfa",
+                "ar": "رصفة",
+                "postal": "19000",
+                "aliases": [
+                    "rasfa"
+                ]
+            },
+            {
+                "code": "19051",
+                "fr": "Salah Bey",
+                "ar": "صالح باي",
+                "postal": "19000",
+                "aliases": [
+                    "salah bey"
+                ]
+            },
+            {
+                "code": "19052",
+                "fr": "Serdj El Ghoul",
+                "ar": "سرج الغول",
+                "postal": "19000",
+                "aliases": [
+                    "serdj el ghoul"
+                ]
+            },
+            {
+                "code": "19053",
+                "fr": "Tachouda",
+                "ar": "تاشودة",
+                "postal": "19000",
+                "aliases": [
+                    "tachouda"
+                ]
+            },
+            {
+                "code": "19054",
+                "fr": "Taya",
+                "ar": "طاية",
+                "postal": "19000",
+                "aliases": [
+                    "taya"
+                ]
+            },
+            {
+                "code": "19055",
+                "fr": "Tella",
+                "ar": "تالة",
+                "postal": "19000",
+                "aliases": [
+                    "tella"
+                ]
+            },
+            {
+                "code": "19056",
+                "fr": "Tizi N'Bechar",
+                "ar": "تيزي نبشار",
+                "postal": "19000",
+                "aliases": [
+                    "tizi nbechar"
+                ]
+            }
+        ]
+    },
+    "23": {
+        "wilaya_code": "23",
+        "wilaya_name": "Annaba",
+        "communes": [
+            {
+                "code": "23001",
+                "fr": "Annaba",
+                "ar": "عنابة",
+                "postal": "23000",
+                "aliases": [
+                    "annaba",
+                    "bone"
+                ]
+            },
+            {
+                "code": "23002",
+                "fr": "Berrahal",
+                "ar": "برحال",
+                "postal": "23000",
+                "aliases": [
+                    "berrahal"
+                ]
+            },
+            {
+                "code": "23003",
+                "fr": "El Hadjar",
+                "ar": "الحجار",
+                "postal": "23000",
+                "aliases": [
+                    "el hadjar"
+                ]
+            },
+            {
+                "code": "23004",
+                "fr": "Eulma",
+                "ar": "العلمة",
+                "postal": "23000",
+                "aliases": [
+                    "eulma"
+                ]
+            },
+            {
+                "code": "23005",
+                "fr": "El Bouni",
+                "ar": "البوني",
+                "postal": "23000",
+                "aliases": [
+                    "el bouni"
+                ]
+            },
+            {
+                "code": "23006",
+                "fr": "Oued El Aneb",
+                "ar": "واد العنب",
+                "postal": "23000",
+                "aliases": [
+                    "oued el aneb"
+                ]
+            },
+            {
+                "code": "23007",
+                "fr": "Cheurfa",
+                "ar": "الشرفة",
+                "postal": "23000",
+                "aliases": [
+                    "cheurfa"
+                ]
+            },
+            {
+                "code": "23008",
+                "fr": "Seraïdi",
+                "ar": "سرايدي",
+                "postal": "23000",
+                "aliases": [
+                    "seraidi"
+                ]
+            },
+            {
+                "code": "23009",
+                "fr": "Aïn Berda",
+                "ar": "عين البردة",
+                "postal": "23000",
+                "aliases": [
+                    "ain berda"
+                ]
+            },
+            {
+                "code": "23010",
+                "fr": "Chetaïbi",
+                "ar": "شطايبي",
+                "postal": "23000",
+                "aliases": [
+                    "chetaibi"
+                ]
+            },
+            {
+                "code": "23011",
+                "fr": "Sidi Amar",
+                "ar": "سيدي عمار",
+                "postal": "23000",
+                "aliases": [
+                    "sidi amar"
+                ]
+            },
+            {
+                "code": "23012",
+                "fr": "Treat",
+                "ar": "التريعات",
+                "postal": "23000",
+                "aliases": [
+                    "treat"
+                ]
+            }
+        ]
+    }
+}

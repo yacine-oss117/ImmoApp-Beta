@@ -1,0 +1,142 @@
+﻿x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  zookeeper-1:
+    image: signoz/zookeeper:3.7.1
+    user: root
+    environment:
+      ZOO_SERVER_ID: "1"
+      ALLOW_ANONYMOUS_LOGIN: "yes"
+      ZOO_AUTOPURGE_INTERVAL: "1"
+      ZOO_ENABLE_PROMETHEUS_METRICS: "yes"
+      ZOO_PROMETHEUS_METRICS_PORT_NUMBER: "9141"
+    volumes:
+      - signoz_zookeeper_data:/bitnami/zookeeper
+      - signoz_zookeeper_datalog:/datalog
+    logging: *default-logging
+    restart: unless-stopped
+
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.5.6
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    environment:
+      CLICKHOUSE_SKIP_USER_SETUP: "1"
+    volumes:
+      - ./deployment/docker/signoz/clickhouse/config.xml:/etc/clickhouse-server/config.xml:ro
+      - ./deployment/docker/signoz/clickhouse/users.xml:/etc/clickhouse-server/users.xml:ro
+      - ./deployment/docker/signoz/clickhouse/custom-function.xml:/etc/clickhouse-server/custom-function.xml:ro
+      - ./deployment/docker/signoz/clickhouse/cluster.xml:/etc/clickhouse-server/config.d/cluster.xml:ro
+      - signoz_clickhouse_data:/var/lib/clickhouse
+    depends_on:
+      zookeeper-1:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "0.0.0.0:8123/ping"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    logging: *default-logging
+    restart: unless-stopped
+
+  schema-migrator-sync:
+    image: signoz/signoz-schema-migrator:v0.142.0
+    command:
+      - "sync"
+      - "--dsn=tcp://clickhouse:9000"
+      - "--up="
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    logging: *default-logging
+    restart: on-failure
+
+  signoz-retention-init:
+    image: clickhouse/clickhouse-server:25.5.6
+    command:
+      - /bin/bash
+      - -ec
+      - clickhouse-client --host clickhouse --multiquery < /retention/retention_15m.sql
+    volumes:
+      - ./deployment/docker/signoz/retention_15m.sql:/retention/retention_15m.sql:ro
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      schema-migrator-sync:
+        condition: service_completed_successfully
+    logging: *default-logging
+    restart: "no"
+
+  signoz:
+    image: signoz/signoz:v0.111.0
+    command:
+      - "--config=/root/config/prometheus.yml"
+    environment:
+      SIGNOZ_ALERTMANAGER_PROVIDER: signoz
+      SIGNOZ_TELEMETRYSTORE_CLICKHOUSE_DSN: tcp://clickhouse:9000
+      SIGNOZ_SQLSTORE_SQLITE_PATH: /var/lib/signoz/signoz.db
+      STORAGE: clickhouse
+      DEPLOYMENT_TYPE: docker-standalone
+      DASHBOARDS_PATH: /root/config/dashboards
+      SIGNOZ_EMAILING_ENABLED: ${SIGNOZ_EMAILING_ENABLED:-false}
+      SIGNOZ_EMAILING_FROM: ${SIGNOZ_EMAILING_FROM:-}
+      SIGNOZ_EMAILING_ADDRESS: ${SIGNOZ_EMAILING_ADDRESS:-}
+      SIGNOZ_EMAILING_AUTH_USERNAME: ${SIGNOZ_EMAILING_AUTH_USERNAME:-}
+      SIGNOZ_EMAILING_AUTH_PASSWORD: ${SIGNOZ_EMAILING_AUTH_PASSWORD:-}
+      # Backward-compatible SMTP vars (still accepted by current SigNoz versions).
+      SMTP_ENABLED: ${SIGNOZ_EMAILING_ENABLED:-false}
+      SMTP_FROM: ${SIGNOZ_EMAILING_FROM:-}
+      SMTP_HOST: ${SIGNOZ_SMTP_HOST:-}
+      SMTP_PORT: ${SIGNOZ_SMTP_PORT:-587}
+      SMTP_USERNAME: ${SIGNOZ_EMAILING_AUTH_USERNAME:-}
+      SMTP_PASSWORD: ${SIGNOZ_EMAILING_AUTH_PASSWORD:-}
+    volumes:
+      - ./deployment/docker/signoz/prometheus.yml:/root/config/prometheus.yml:ro
+      - signoz_sqlite_data:/var/lib/signoz
+    ports:
+      - "127.0.0.1:3301:8080"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+      schema-migrator-sync:
+        condition: service_completed_successfully
+      signoz-retention-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "localhost:8080/api/v1/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 10
+    logging: *default-logging
+    restart: unless-stopped
+
+  otel-collector:
+    image: signoz/signoz-otel-collector:v0.142.0
+    command:
+      - "--config=/etc/otel-collector-config.yaml"
+      - "--manager-config=/etc/manager-config.yaml"
+      - "--copy-path=/var/tmp/collector-config.yaml"
+    volumes:
+      - ./deployment/docker/signoz/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+      - ./deployment/docker/signoz/otel-collector-opamp-config.yaml:/etc/manager-config.yaml:ro
+    ports:
+      - "127.0.0.1:4317:4317"
+      - "127.0.0.1:4318:4318"
+    depends_on:
+      signoz:
+        condition: service_healthy
+    logging: *default-logging
+    restart: unless-stopped
+
+volumes:
+  signoz_clickhouse_data:
+  signoz_zookeeper_data:
+  signoz_zookeeper_datalog:
+  signoz_sqlite_data:
+

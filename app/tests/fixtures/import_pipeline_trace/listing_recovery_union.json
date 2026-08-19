@@ -1,0 +1,31 @@
+{
+  "controller_state": {
+    "detected_entity": "listing",
+    "bundle_mode": "single_entity",
+    "topology_side_hint": "listing_side",
+    "manual_mapping_required": true,
+    "import_supported": true,
+    "detected_columns": [
+      { "header": "owner", "detected_type": "name", "confidence": 0.95 },
+      { "header": "phone", "detected_type": "phone", "confidence": 0.95 },
+      { "header": "action", "detected_type": "action", "confidence": 0.3 },
+      { "header": "type", "detected_type": "type", "confidence": 0.3 },
+      { "header": "location", "detected_type": "location", "confidence": 0.3 },
+      { "header": "budget", "detected_type": "price", "confidence": 0.3 }
+    ],
+    "column_mapping": {
+      "family_name": "owner",
+      "phone": "phone"
+    }
+  },
+  "expected": {
+    "mapping": {
+      "step_label": "Review your columns",
+      "mapping_palette_mode": "recovery_union",
+      "mapping_candidate_entities": ["listing", "offer"],
+      "recoverable_by_manual_mapping": true,
+      "continue_enabled": true,
+      "allowed_actions": ["back", "continue"]
+    }
+  }
+}

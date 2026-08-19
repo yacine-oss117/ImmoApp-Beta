@@ -1,0 +1,3 @@
+# App services moved to compose.yml to allow single-file LAN deployment.
+# Keep this overlay file for backwards compatibility with existing stack scripts.
+services: {}

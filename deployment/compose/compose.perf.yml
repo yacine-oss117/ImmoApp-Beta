@@ -1,0 +1,196 @@
+x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  toxiproxy:
+    image: ghcr.io/shopify/toxiproxy:2.12.0
+    ports:
+      - "127.0.0.1:8474:8474"
+    restart: unless-stopped
+    logging: *default-logging
+
+  toxiproxy-init:
+    image: curlimages/curl:8.12.1
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      toxiproxy:
+        condition: service_started
+    environment:
+      PERF_DB_LATENCY_MS: ${PERF_DB_LATENCY_MS:-15}
+      PERF_DB_JITTER_MS: ${PERF_DB_JITTER_MS:-5}
+      PERF_DB_DOWNSTREAM_BANDWIDTH_KBPS: ${PERF_DB_DOWNSTREAM_BANDWIDTH_KBPS:-0}
+      PERF_RABBIT_LATENCY_MS: ${PERF_RABBIT_LATENCY_MS:-10}
+      PERF_RABBIT_JITTER_MS: ${PERF_RABBIT_JITTER_MS:-4}
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        set -eu
+        api="http://toxiproxy:8474"
+        for i in $$(seq 1 60); do
+          if curl -fsS "$$api/version" >/dev/null 2>&1; then
+            break
+          fi
+          sleep 1
+        done
+        curl -fsS "$$api/version" >/dev/null
+
+        create_proxy() {
+          name="$$1"
+          listen="$$2"
+          upstream="$$3"
+          curl -fsS -X DELETE "$$api/proxies/$$name" >/dev/null 2>&1 || true
+          curl -fsS -X POST "$$api/proxies" \
+            -H "Content-Type: application/json" \
+            -d "{\"name\":\"$$name\",\"listen\":\"$$listen\",\"upstream\":\"$$upstream\"}" >/dev/null
+        }
+
+        add_latency_toxic() {
+          name="$$1"
+          toxic_name="$$2"
+          latency_ms="$$3"
+          jitter_ms="$$4"
+          if [ "$$latency_ms" -le 0 ]; then
+            return 0
+          fi
+          curl -fsS -X POST "$$api/proxies/$$name/toxics" \
+            -H "Content-Type: application/json" \
+            -d "{\"name\":\"$$toxic_name\",\"type\":\"latency\",\"stream\":\"downstream\",\"attributes\":{\"latency\":$$latency_ms,\"jitter\":$$jitter_ms}}" >/dev/null
+        }
+
+        add_bandwidth_toxic() {
+          name="$$1"
+          toxic_name="$$2"
+          rate_kbps="$$3"
+          if [ "$$rate_kbps" -le 0 ]; then
+            return 0
+          fi
+          curl -fsS -X POST "$$api/proxies/$$name/toxics" \
+            -H "Content-Type: application/json" \
+            -d "{\"name\":\"$$toxic_name\",\"type\":\"bandwidth\",\"stream\":\"downstream\",\"attributes\":{\"rate\":$$rate_kbps}}" >/dev/null
+        }
+
+        create_proxy db 0.0.0.0:15432 db:5432
+        create_proxy rabbitmq 0.0.0.0:15672 rabbitmq:5672
+
+        add_latency_toxic db db_latency "$$PERF_DB_LATENCY_MS" "$$PERF_DB_JITTER_MS"
+        add_bandwidth_toxic db db_bandwidth "$$PERF_DB_DOWNSTREAM_BANDWIDTH_KBPS"
+        add_latency_toxic rabbitmq rabbitmq_latency "$$PERF_RABBIT_LATENCY_MS" "$$PERF_RABBIT_JITTER_MS"
+
+        echo "toxiproxy-init: configured db and rabbitmq proxies"
+    restart: "no"
+    logging: *default-logging
+
+  web:
+    environment:
+      POSTGRES_HOST: toxiproxy
+      POSTGRES_PORT: "15432"
+      ANON_THROTTLE: ${ANON_THROTTLE_PERF:-200/minute}
+      TOKEN_OBTAIN_THROTTLE: ${TOKEN_OBTAIN_THROTTLE_PERF:-200/minute}
+      TOKEN_REFRESH_THROTTLE: ${TOKEN_REFRESH_THROTTLE_PERF:-60/minute}
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:?required}@toxiproxy:15672//
+      ASGI_THREADS: ${PERF_ASGI_THREADS:-64}
+      PG_POOL_MIN: ${PERF_PG_POOL_MIN:-4}
+      PG_POOL_MAX: ${PERF_PG_POOL_MAX:-64}
+      PG_POOL_TIMEOUT: ${PERF_PG_POOL_TIMEOUT:-30}
+      PG_LOG_QUERIES: ${PERF_PG_LOG_QUERIES:-0}
+      PG_SLOW_QUERY_MS: ${PERF_PG_SLOW_QUERY_MS:-500}
+      IMMOAPP_SESSION_VALIDATE_CACHE_SECONDS: ${IMMOAPP_SESSION_VALIDATE_CACHE_SECONDS_PERF:-30}
+      IMMOAPP_AUTH_USER_CACHE_TTL_SECONDS: ${IMMOAPP_AUTH_USER_CACHE_TTL_SECONDS_PERF:-300}
+      IMMOAPP_CLIENT_COUNT_CACHE_TTL_SECONDS: ${IMMOAPP_CLIENT_COUNT_CACHE_TTL_SECONDS_PERF:-300}
+      IMMOAPP_CLIENT_LIST_CACHE_TTL_SECONDS: ${IMMOAPP_CLIENT_LIST_CACHE_TTL_SECONDS_PERF:-300}
+      IMMOAPP_LISTING_COUNT_CACHE_TTL_SECONDS: ${IMMOAPP_LISTING_COUNT_CACHE_TTL_SECONDS_PERF:-300}
+      IMMOAPP_LISTING_LIST_CACHE_TTL_SECONDS: ${IMMOAPP_LISTING_LIST_CACHE_TTL_SECONDS_PERF:-300}
+      IMMOAPP_NOTIFICATION_COUNT_CACHE_TTL_SECONDS: ${IMMOAPP_NOTIFICATION_COUNT_CACHE_TTL_SECONDS_PERF:-180}
+      IMMOAPP_NOTIFICATION_LIST_CACHE_TTL_SECONDS: ${IMMOAPP_NOTIFICATION_LIST_CACHE_TTL_SECONDS_PERF:-180}
+      IMMOAPP_CLIENTS_LIST_HTTP_CACHE_TTL_SECONDS: ${IMMOAPP_CLIENTS_LIST_HTTP_CACHE_TTL_SECONDS_PERF:-300}
+      IMMOAPP_LISTINGS_LIST_HTTP_CACHE_TTL_SECONDS: ${IMMOAPP_LISTINGS_LIST_HTTP_CACHE_TTL_SECONDS_PERF:-300}
+      IMMOAPP_NOTIFICATIONS_LIST_HTTP_CACHE_TTL_SECONDS: ${IMMOAPP_NOTIFICATIONS_LIST_HTTP_CACHE_TTL_SECONDS_PERF:-180}
+      IMMOAPP_USERS_LIST_HTTP_CACHE_TTL_SECONDS: ${IMMOAPP_USERS_LIST_HTTP_CACHE_TTL_SECONDS_PERF:-300}
+      IMMOAPP_INVITES_LIST_HTTP_CACHE_TTL_SECONDS: ${IMMOAPP_INVITES_LIST_HTTP_CACHE_TTL_SECONDS_PERF:-300}
+      IMMOAPP_NOTIFICATION_LIST_INCLUDE_DATA: ${IMMOAPP_NOTIFICATION_LIST_INCLUDE_DATA_PERF:-0}
+      IMMOAPP_MATCH_BUILD_PIPELINE: ${IMMOAPP_MATCH_BUILD_PIPELINE_PERF:-direct}
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS_PERF:-120000}
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS_PERF:-5000}
+      IMMOAPP_SECRETS_BACKEND: openbao
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp/dev
+      IMMOAPP_SECRETS_REQUIRED: "1"
+      IMMOAPP_ALLOW_ENV_SECRETS: "0"
+      BAO_ADDR: http://openbao:8200
+      BAO_VERIFY_SSL: "0"
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+    command:
+      [
+        "sh",
+        "-ec",
+        "python -m server.secret_store.openbao_runtime_bootstrap && exec gunicorn server.immoapp_server.wsgi:application -b 0.0.0.0:8000 --workers ${PERF_WEB_WORKERS:-4} --threads ${PERF_WEB_THREADS:-8} --timeout ${PERF_WEB_TIMEOUT:-120} --keep-alive 5",
+      ]
+    cpus: ${PERF_WEB_CPUS:-4.0}
+    mem_limit: ${PERF_WEB_MEM_LIMIT:-2g}
+
+  worker:
+    environment:
+      POSTGRES_HOST: toxiproxy
+      POSTGRES_PORT: "15432"
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:?required}@toxiproxy:15672//
+      IMMOAPP_MATCH_BUILD_PIPELINE: ${IMMOAPP_MATCH_BUILD_PIPELINE_PERF:-direct}
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS_PERF:-120000}
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS_PERF:-5000}
+      IMMOAPP_SECRETS_BACKEND: openbao
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp/dev
+      IMMOAPP_SECRETS_REQUIRED: "1"
+      IMMOAPP_ALLOW_ENV_SECRETS: "0"
+      BAO_ADDR: http://openbao:8200
+      BAO_VERIFY_SSL: "0"
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+    cpus: ${PERF_WORKER_CPUS:-2.0}
+    mem_limit: ${PERF_WORKER_MEM_LIMIT:-2g}
+
+  worker-rebuild:
+    environment:
+      POSTGRES_HOST: toxiproxy
+      POSTGRES_PORT: "15432"
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:?required}@toxiproxy:15672//
+      IMMOAPP_MATCH_BUILD_PIPELINE: ${IMMOAPP_MATCH_BUILD_PIPELINE_PERF:-direct}
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS_PERF:-120000}
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS_PERF:-5000}
+      IMMOAPP_SECRETS_BACKEND: openbao
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp/dev
+      IMMOAPP_SECRETS_REQUIRED: "1"
+      IMMOAPP_ALLOW_ENV_SECRETS: "0"
+      BAO_ADDR: http://openbao:8200
+      BAO_VERIFY_SSL: "0"
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+    cpus: ${PERF_REBUILD_WORKER_CPUS:-1.0}
+    mem_limit: ${PERF_REBUILD_WORKER_MEM_LIMIT:-1g}
+
+  beat:
+    environment:
+      POSTGRES_HOST: toxiproxy
+      POSTGRES_PORT: "15432"
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:?required}@toxiproxy:15672//
+      IMMOAPP_MATCH_BUILD_PIPELINE: ${IMMOAPP_MATCH_BUILD_PIPELINE_PERF:-direct}
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS_PERF:-120000}
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS_PERF:-5000}
+      IMMOAPP_SECRETS_BACKEND: openbao
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp/dev
+      IMMOAPP_SECRETS_REQUIRED: "1"
+      IMMOAPP_ALLOW_ENV_SECRETS: "0"
+      BAO_ADDR: http://openbao:8200
+      BAO_VERIFY_SSL: "0"
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+    cpus: ${PERF_BEAT_CPUS:-0.5}
+    mem_limit: ${PERF_BEAT_MEM_LIMIT:-768m}
+
+  k6:
+    image: grafana/k6:0.57.0
+    entrypoint: ["k6"]
+    volumes:
+      - ./scripts/perf:/perf:ro
+      - ./scripts/perf_outputs:/perf_outputs
+    logging: *default-logging

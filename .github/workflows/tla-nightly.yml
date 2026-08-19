@@ -1,0 +1,41 @@
+name: TLA Nightly
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  verify-tla:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Download TLA tools
+        run: |
+          mkdir -p tools/tla
+          curl -fsSL -o tools/tla/tla2tools.jar https://github.com/tlaplus/tlaplus/releases/latest/download/tla2tools.jar
+          test -f tools/tla/tla2tools.jar
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Run TLA waves
+        env:
+          TLA_TOOLS_JAR: ${{ github.workspace }}/tools/tla/tla2tools.jar
+        run: |
+          python scripts/verify_tla_wave1.py
+          python scripts/verify_tla_wave2.py
+          python scripts/verify_tla_wave3.py
+          python scripts/verify_tla_wave4.py
+          python scripts/verify_tla_wave5.py
+          python scripts/verify_tla_wave6.py

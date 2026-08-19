@@ -1,0 +1,89 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+.eggs/
+dist/
+build/
+*.manifest
+*.spec
+
+# Runtime data (stored in %PROGRAMDATA%\ImmoApp on Windows)
+*.db
+*.sqlite
+*.db.backup
+app/data/backups/
+
+# Media (object storage)
+app/media/
+
+# Logs
+logs/
+*.log
+.tmp*
+/tmp_run_*.ps1
+/tmp_*.ps1
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Cache
+.cache/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.hypothesis/
+/Microsoft/Windows/PowerShell/ModuleAnalysisCache
+
+# Environment
+/.venv/
+/venv/
+/ENV/
+/env/
+.env
+.env.local
+.env.prod
+.env.*
+!.env.example
+!.env.local.example
+!.env.prod.example
+!deployment/env/
+!deployment/env/.env.example
+!deployment/env/.env.prod.example
+
+# Coverage
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+
+# Testing
+.tox/
+.nox/
+
+# Generated benchmark/performance evidence
+scripts/benchmark_outputs/
+scripts/perf_outputs/
+scripts/profiling/
+
+# Developer-local release artifacts. Stable release artifacts must be published
+# under C:\ProgramData\ImmoApp\release_artifacts by default.
+release_artifacts/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Downloaded verification tooling
+tools/tla/tla2tools.jar
+
+# Optional local font binaries (the app falls back to system fonts)
+app/assets/fonts/*.ttf
+app/assets/fonts/*.otf

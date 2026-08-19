@@ -1,0 +1,72 @@
+# ── VCS / editor metadata ──
+.git
+.gitignore
+.vscode
+.idea
+
+# ── Python caches ──
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.mypy_cache
+.pytest_cache
+.cache
+.ruff_cache
+.tmp
+
+# ── Virtual environments ──
+.venv
+venv
+env
+
+# ── Secrets / local config ──
+.env
+.env.*
+*.pem
+*.key
+*.crt
+
+# ── Build artifacts ──
+dist
+build
+*.egg-info
+*.whl
+
+# ── Desktop client (not needed in server image) ──
+app/
+
+# ── Dev-only verification assets ──
+tools/
+
+# ── Dev/ops scripts (not needed at runtime) ──
+scripts/
+ops/
+checks*.ps1
+
+# NOTE: server/alembic/ and server/alembic.ini are NOT excluded — they are needed
+# inside the server container to run DB migrations on startup.
+
+# ── Deployment manifests / local orchestration (not needed inside image) ──
+deployment/compose/
+deployment/proxy/
+deployment/env/
+Makefile
+
+# ── Documentation ──
+docs/
+*.md
+
+# ── Test artifacts ──
+tests/
+htmlcov
+.coverage*
+
+# ── Local data ──
+media
+staticfiles
+logs
+*.log
+
+# ── Large binaries ──
+*.jar

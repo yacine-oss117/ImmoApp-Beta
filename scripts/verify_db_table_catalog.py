@@ -1,0 +1,33 @@
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
+
+from generate_db_table_catalog import OUTPUT_PATH, render_db_table_catalog
+
+
+def main() -> int:
+    if not OUTPUT_PATH.exists():
+        print(
+            "verify_db_table_catalog: missing docs/reference/DB_TABLE_CATALOG.md. "
+            "Run python scripts/generate_db_table_catalog.py"
+        )
+        return 1
+    expected = render_db_table_catalog()
+    current = OUTPUT_PATH.read_text(encoding="utf-8")
+    if current != expected:
+        print(
+            "verify_db_table_catalog: docs/reference/DB_TABLE_CATALOG.md is stale. "
+            "Run python scripts/generate_db_table_catalog.py"
+        )
+        return 1
+    print("verify_db_table_catalog: OK")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

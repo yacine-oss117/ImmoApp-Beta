@@ -1,0 +1,162 @@
+ImmoApp Source-Available Evaluation License v1.0
+
+Copyright (c) 2026 Yacine Larbaoui. All rights reserved.
+
+This is a source-available evaluation license. It is not an open-source license.
+
+1. DEFINITIONS
+
+"Software" means the ImmoApp source code, documentation, configuration files,
+tests, scripts, and other original materials made available in this repository,
+excluding Third-Party Materials as defined below.
+
+"Licensor" means Yacine Larbaoui, the copyright holder of the Software.
+
+"Evaluation Purpose" means examining, reviewing, building, installing, running,
+and testing the Software solely to assess its functionality, design, architecture,
+code quality, or the Licensor's technical work. Evaluation Purpose includes
+personal technical evaluation, recruitment or employment assessment, academic
+review of the Software itself, and non-commercial technical due diligence.
+
+"Third-Party Materials" means software, fonts, libraries, assets, or other
+materials included with or referenced by the Software that are owned or licensed
+by third parties.
+
+2. LIMITED LICENSE GRANT
+
+Subject to all terms of this License, the Licensor grants you a limited,
+non-exclusive, non-transferable, non-sublicensable, royalty-free license to:
+
+(a) view and read the Software;
+
+(b) download or clone the Software and make reasonable local copies solely for
+    an Evaluation Purpose;
+
+(c) build, install, execute, and test the Software solely for an Evaluation
+    Purpose; and
+
+(d) make temporary local changes strictly necessary to configure, build, run,
+    or test the Software for an Evaluation Purpose, provided that those changes
+    are not distributed, published, incorporated into another work, or used for
+    any other purpose.
+
+No other rights are granted.
+
+3. PROHIBITED USES
+
+Unless the Licensor gives you separate prior written permission, you may not:
+
+(a) use the Software, in whole or in part, for any commercial, production,
+    revenue-generating, business-operational, or customer-facing purpose;
+
+(b) sell, rent, lease, license, sublicense, monetize, distribute, publish,
+    mirror, or otherwise make the Software or a modified version available to
+    another person or organization, except to the extent that GitHub's platform
+    functionality necessarily permits viewing or forking of a public repository
+    under GitHub's Terms of Service;
+
+(c) create, publish, distribute, or exploit a derivative work based on the
+    Software, except for the temporary local configuration changes expressly
+    allowed by Section 2(d);
+
+(d) copy, incorporate, translate, adapt, port, extract, reuse, or embed the
+    Software, or any substantial portion of its source code, implementation,
+    tests, documentation, schemas, or other copyrightable expression, in any
+    other software, product, service, library, framework, template, or project;
+
+(e) use the Software or any substantial portion of it as a reference
+    implementation, template, starter codebase, or implementation source for
+    developing another software product or service;
+
+(f) operate, host, deploy, or provide the Software or a modified version as a
+    service, hosted application, software-as-a-service offering, internal
+    production system, or managed service;
+
+(g) use the Software or any substantial portion of it as training data,
+    fine-tuning data, evaluation data, retrieval material, code-generation
+    context, or other input to an artificial-intelligence or machine-learning
+    system for the purpose of producing, improving, or developing other
+    software or code;
+
+(h) remove, obscure, alter, or misrepresent any copyright, authorship,
+    attribution, license, or proprietary notice contained in the Software; or
+
+(i) represent that the Software is open source or that you own, authored, or
+    have rights in the Software beyond those expressly granted by this License.
+
+4. NO LICENSE TO IDEAS, PATENTS, OR TRADEMARKS
+
+This License grants only the limited copyright permissions expressly stated in
+Section 2. It does not grant any patent, trademark, trade-name, branding, or
+other intellectual-property rights. Nothing in this License should be read as
+an assertion that copyright law protects ideas, concepts, methods, systems,
+algorithms, or functionality that applicable law leaves unprotected.
+
+5. GITHUB PLATFORM RIGHTS
+
+If the Software is hosted in a public repository on GitHub, GitHub and its users
+may receive limited platform rights under GitHub's Terms of Service, including
+rights necessary for GitHub to host, display, reproduce, and enable public
+forking of repository content. Those platform rights do not grant you any
+additional permission from the Licensor to use, modify, distribute, or exploit
+the Software outside the limited Evaluation Purpose permitted by this License.
+
+6. THIRD-PARTY MATERIALS
+
+Third-Party Materials are not relicensed under this License. They remain subject
+to their respective licenses, notices, and terms. You are responsible for
+complying with those terms. Where a third-party license grants rights broader
+than this License, those broader rights apply only to the relevant Third-Party
+Materials and not to the Licensor's Software.
+
+7. OWNERSHIP AND RESERVATION OF RIGHTS
+
+The Software is licensed, not sold. The Licensor retains all right, title, and
+interest in and to the Software, including all copyright and other applicable
+intellectual-property rights. All rights not expressly granted in Section 2 are
+reserved.
+
+8. ADDITIONAL PERMISSIONS
+
+Commercial use, redistribution, incorporation into another product, derivative
+works, production deployment, or any other use outside Section 2 requires a
+separate written license from the Licensor.
+
+9. TERMINATION
+
+Your rights under this License terminate automatically and immediately if you
+breach any term of this License. Upon termination, you must stop using the
+Software and delete copies in your possession or control, except where retention
+is required by law or unavoidable in ordinary platform backups. Sections 3
+through 13 survive termination to the extent applicable.
+
+10. DISCLAIMER OF WARRANTY
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF ANY
+KIND, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, NON-INFRINGEMENT,
+ACCURACY, SECURITY, OR RELIABILITY. YOU ASSUME ALL RISK ARISING FROM ACCESSING,
+BUILDING, INSTALLING, RUNNING, OR TESTING THE SOFTWARE.
+
+11. LIMITATION OF LIABILITY
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, THE LICENSOR WILL NOT BE
+LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, CONSEQUENTIAL,
+OR OTHER DAMAGES, OR FOR LOSS OF DATA, PROFITS, REVENUE, BUSINESS, OR GOODWILL,
+ARISING FROM OR RELATED TO THE SOFTWARE OR THIS LICENSE, EVEN IF ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGES.
+
+12. SEVERABILITY
+
+If any provision of this License is held unenforceable, that provision will be
+limited or modified only to the minimum extent necessary, and the remaining
+provisions will remain in effect.
+
+13. ACCEPTANCE
+
+You are not required to accept this License merely to view content that the
+hosting platform makes publicly viewable. By exercising any permission granted
+under Section 2 that you would not otherwise have under applicable law or the
+hosting platform's terms, you accept and agree to comply with this License.
+
+For permissions beyond this License, contact the copyright holder.

@@ -1,0 +1,270 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, master]
+
+jobs:
+  pr-fast:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      QT_QPA_PLATFORM: offscreen
+      ALE_KEY_VERSION: v1
+      ALE_MASTER_KEY: ci-master-key-32-bytes-minimum-for-tests
+      ALE_SEARCH_SECRET: ci-search-secret-for-tests
+      ALE_KDF_SALT: ci-kdf-salt-for-tests-1234
+      IMMOAPP_REQUIRE_ALE_KEY: "1"
+      POSTGRES_DB: immoapp
+      POSTGRES_USER: immoapp_app
+      POSTGRES_PASSWORD: immoapp_app_pw
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_ADMIN_USER: immoapp_app
+      POSTGRES_ADMIN_PASSWORD: immoapp_app_pw
+      VALKEY_URL: redis://127.0.0.1:6379/1
+      CHANNEL_LAYER_URL: redis://127.0.0.1:6379/3
+      CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/2
+      CELERY_BROKER_URL: redis://127.0.0.1:6379/0
+      STORAGE_ENDPOINT_URL: http://127.0.0.1:9000
+      STORAGE_ACCESS_KEY: immoapp
+      STORAGE_SECRET_KEY: immoapp_minio_pw
+      STORAGE_BUCKET: immoapp
+      STORAGE_REGION: us-east-1
+      STORAGE_USE_SSL: "0"
+      MINIO_ROOT_USER: immoapp
+      MINIO_ROOT_PASSWORD: immoapp_minio_pw
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      DJANGO_SECRET_KEY: ci-secret-key
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DJANGO_DEBUG: "1"
+      PYTHONPATH: .
+      IMMOAPP_ENV: "ci"
+      IMMOAPP_ALLOW_ENV_SECRETS: "1"
+      IMMOAPP_SECRETS_BACKEND: env
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: immoapp
+          POSTGRES_USER: immoapp_app
+          POSTGRES_PASSWORD: immoapp_app_pw
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U immoapp_app -d immoapp"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      minio:
+        image: bitnami/minio:latest
+        env:
+          MINIO_ROOT_USER: immoapp
+          MINIO_ROOT_PASSWORD: immoapp_minio_pw
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/server.txt -r requirements/client.txt
+      - name: Wait for services
+        run: |
+          python - <<'PY'
+          import socket, time
+          targets = [("127.0.0.1",5432,"postgres"),("127.0.0.1",6379,"redis"),("127.0.0.1",9000,"minio")]
+          deadline = time.time() + 90
+          for host, port, name in targets:
+              ok = False
+              while time.time() < deadline:
+                  s = socket.socket()
+                  s.settimeout(1.0)
+                  try:
+                      s.connect((host, port))
+                      ok = True
+                      break
+                  except OSError:
+                      time.sleep(1.0)
+                  finally:
+                      s.close()
+              if not ok:
+                  raise SystemExit(f"{name} not ready on {host}:{port}")
+          print("all services ready")
+          PY
+      - name: Black
+        run: python -m black --check app server core
+      - name: Ruff
+        run: python -m ruff check app server core
+      - name: Mypy
+        run: python -m mypy .
+      - name: Unit tests (server)
+        run: python -m pytest app/tests/server_tests -m "not integration and not slow and not perf and not e2e and not nightly"
+      - name: Unit tests (importer legacy subtree)
+        run: python -m pytest tests/test_importer -k "not end_to_end"
+      - name: Django firewall tests
+        run: python server/manage.py test server.api.tests.test_firewall --noinput
+      - name: UI startup smoke (fast)
+        env:
+          IMMOAPP_STARTUP_LIGHT: "1"
+        run: python scripts/check_startup.py
+
+  main-full:
+    if: github.event_name == 'push' && (github.ref_name == 'main' || github.ref_name == 'master')
+    runs-on: ubuntu-latest
+    env:
+      QT_QPA_PLATFORM: offscreen
+      ALE_KEY_VERSION: v1
+      ALE_MASTER_KEY: ci-master-key-32-bytes-minimum-for-tests
+      ALE_SEARCH_SECRET: ci-search-secret-for-tests
+      ALE_KDF_SALT: ci-kdf-salt-for-tests-1234
+      IMMOAPP_REQUIRE_ALE_KEY: "1"
+      POSTGRES_DB: immoapp
+      POSTGRES_USER: immoapp_app
+      POSTGRES_PASSWORD: immoapp_app_pw
+      POSTGRES_HOST: 127.0.0.1
+      POSTGRES_PORT: "5432"
+      POSTGRES_ADMIN_USER: immoapp_app
+      POSTGRES_ADMIN_PASSWORD: immoapp_app_pw
+      VALKEY_URL: redis://127.0.0.1:6379/1
+      CHANNEL_LAYER_URL: redis://127.0.0.1:6379/3
+      CELERY_RESULT_BACKEND: redis://127.0.0.1:6379/2
+      CELERY_BROKER_URL: redis://127.0.0.1:6379/0
+      STORAGE_ENDPOINT_URL: http://127.0.0.1:9000
+      STORAGE_ACCESS_KEY: immoapp
+      STORAGE_SECRET_KEY: immoapp_minio_pw
+      STORAGE_BUCKET: immoapp
+      STORAGE_REGION: us-east-1
+      STORAGE_USE_SSL: "0"
+      MINIO_ROOT_USER: immoapp
+      MINIO_ROOT_PASSWORD: immoapp_minio_pw
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      DJANGO_SECRET_KEY: ci-secret-key
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1
+      DJANGO_DEBUG: "1"
+      PYTHONPATH: .
+      IMMOAPP_ENV: "ci"
+      IMMOAPP_ALLOW_ENV_SECRETS: "1"
+      IMMOAPP_SECRETS_BACKEND: env
+      IMMOAPP_ENFORCE_NO_SECRETS: "1"
+      IMMOAPP_ENFORCE_SAST: "1"
+      IMMOAPP_ENFORCE_DEP_AUDIT: "1"
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: immoapp
+          POSTGRES_USER: immoapp_app
+          POSTGRES_PASSWORD: immoapp_app_pw
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U immoapp_app -d immoapp"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      minio:
+        image: bitnami/minio:latest
+        env:
+          MINIO_ROOT_USER: immoapp
+          MINIO_ROOT_PASSWORD: immoapp_minio_pw
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl -f http://localhost:9000/minio/health/live || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - name: Install deps + scanners
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements/server.txt -r requirements/client.txt
+          pip install bandit pip-audit
+      - name: Wait for services
+        run: |
+          python - <<'PY'
+          import socket, time
+          targets = [("127.0.0.1",5432,"postgres"),("127.0.0.1",6379,"redis"),("127.0.0.1",9000,"minio")]
+          deadline = time.time() + 90
+          for host, port, name in targets:
+              ok = False
+              while time.time() < deadline:
+                  s = socket.socket()
+                  s.settimeout(1.0)
+                  try:
+                      s.connect((host, port))
+                      ok = True
+                      break
+                  except OSError:
+                      time.sleep(1.0)
+                  finally:
+                      s.close()
+              if not ok:
+                  raise SystemExit(f"{name} not ready on {host}:{port}")
+          print("all services ready")
+          PY
+      - name: Fast lane baseline
+        run: |
+          python -m black --check app server core
+          python -m ruff check app server core
+          python -m mypy .
+          python -m pytest app/tests/server_tests -m "not integration and not slow and not perf and not e2e and not nightly"
+          python -m pytest tests/test_importer -k "not end_to_end"
+          python server/manage.py test server.api.tests.test_firewall --noinput
+      - name: Integration tests
+        run: |
+          python -m pytest app/tests/server_tests -m "integration or e2e"
+          python -m pytest tests/backend/test_connection_leak.py -v
+      - name: UI tests
+        run: python -m pytest app/tests/ui_tests
+      - name: Security and policy guardrails
+        run: |
+          python scripts/verify_prod_config.py
+          python scripts/verify_namespace_consistency.py
+          python scripts/verify_local_env_safety.py
+          python scripts/verify_no_secrets.py
+          python scripts/verify_no_exception_leakage.py
+          python scripts/verify_api_contract_policies.py
+          python scripts/verify_domain_integration_matrix.py
+          python scripts/verify_write_policies.py
+          python scripts/verify_sast.py
+          python scripts/verify_dependency_vulns.py
+          python scripts/verify_infrastructure_hardening.py
+          python scripts/verify_security_schema.py
+          python scripts/verify_schema.py

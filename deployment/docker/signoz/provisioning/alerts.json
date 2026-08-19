@@ -1,0 +1,201 @@
+{
+  "channels": [
+    {
+      "name": "immoapp-email",
+      "email_configs": [
+        {
+          "to": "${SIGNOZ_ALERT_EMAIL_TO}",
+          "send_resolved": true
+        }
+      ]
+    }
+  ],
+  "rules": [
+    {
+      "alert": "ImmoApp API 5xx rate high",
+      "alertType": "METRIC_BASED_ALERT",
+      "ruleType": "promql_rule",
+      "evalWindow": "5m",
+      "frequency": "1m",
+      "condition": {
+        "compositeQuery": {
+          "queryType": "promql",
+          "panelType": "graph",
+          "promQueries": {
+            "A": {
+              "query": "(sum(rate(signoz_calls_total{service_name=\"immoapp-server\",status_code=\"STATUS_CODE_ERROR\"}[5m])) / clamp_min(sum(rate(signoz_calls_total{service_name=\"immoapp-server\"}[5m])), 1)) * 100",
+              "disabled": false
+            }
+          }
+        },
+        "selectedQueryName": "A"
+      },
+      "labels": {
+        "severity": "critical",
+        "service": "immoapp-server"
+      },
+      "annotations": {
+        "summary": "API 5xx ratio is above threshold for immoapp-server."
+      },
+      "disabled": false,
+      "preferredChannels": [
+        "immoapp-email"
+      ]
+    },
+    {
+      "alert": "ImmoApp API latency p95 high",
+      "alertType": "METRIC_BASED_ALERT",
+      "ruleType": "promql_rule",
+      "evalWindow": "10m",
+      "frequency": "1m",
+      "condition": {
+        "compositeQuery": {
+          "queryType": "promql",
+          "panelType": "graph",
+          "promQueries": {
+            "A": {
+              "query": "histogram_quantile(0.95, sum(rate(signoz_latency_bucket{service_name=\"immoapp-server\"}[5m])) by (le))",
+              "disabled": false
+            }
+          }
+        },
+        "selectedQueryName": "A"
+      },
+      "labels": {
+        "severity": "warning",
+        "service": "immoapp-server"
+      },
+      "annotations": {
+        "summary": "API p95 latency is above threshold for immoapp-server."
+      },
+      "disabled": false,
+      "preferredChannels": [
+        "immoapp-email"
+      ]
+    },
+    {
+      "alert": "ImmoApp Celery failures detected",
+      "alertType": "METRIC_BASED_ALERT",
+      "ruleType": "promql_rule",
+      "evalWindow": "10m",
+      "frequency": "1m",
+      "condition": {
+        "compositeQuery": {
+          "queryType": "promql",
+          "panelType": "graph",
+          "promQueries": {
+            "A": {
+              "query": "sum(rate(signoz_calls_total{service_name=~\"immoapp-worker|immoapp-beat\",status_code=\"STATUS_CODE_ERROR\"}[10m]))",
+              "disabled": false
+            }
+          }
+        },
+        "selectedQueryName": "A"
+      },
+      "labels": {
+        "severity": "critical",
+        "service": "immoapp-worker"
+      },
+      "annotations": {
+        "summary": "Worker/beat error rate is above threshold."
+      },
+      "disabled": false,
+      "preferredChannels": [
+        "immoapp-email"
+      ]
+    },
+    {
+      "alert": "ImmoApp queue backlog high",
+      "alertType": "METRIC_BASED_ALERT",
+      "ruleType": "promql_rule",
+      "evalWindow": "10m",
+      "frequency": "1m",
+      "condition": {
+        "compositeQuery": {
+          "queryType": "promql",
+          "panelType": "graph",
+          "promQueries": {
+            "A": {
+              "query": "sum(rabbitmq_queue_messages{queue=~\"celery|maintenance\"})",
+              "disabled": false
+            }
+          }
+        },
+        "selectedQueryName": "A"
+      },
+      "labels": {
+        "severity": "critical",
+        "service": "immoapp-worker"
+      },
+      "annotations": {
+        "summary": "RabbitMQ queue backlog is above threshold."
+      },
+      "disabled": false,
+      "preferredChannels": [
+        "immoapp-email"
+      ]
+    },
+    {
+      "alert": "ImmoApp DB connections near saturation",
+      "alertType": "METRIC_BASED_ALERT",
+      "ruleType": "promql_rule",
+      "evalWindow": "5m",
+      "frequency": "1m",
+      "condition": {
+        "compositeQuery": {
+          "queryType": "promql",
+          "panelType": "graph",
+          "promQueries": {
+            "A": {
+              "query": "(sum(pg_stat_activity_count{datname=\"immoapp\"}) / clamp_min(sum(pg_settings_max_connections), 1)) * 100",
+              "disabled": false
+            }
+          }
+        },
+        "selectedQueryName": "A"
+      },
+      "labels": {
+        "severity": "critical",
+        "service": "immoapp-db"
+      },
+      "annotations": {
+        "summary": "Database active connections are above threshold."
+      },
+      "disabled": false,
+      "preferredChannels": [
+        "immoapp-email"
+      ]
+    },
+    {
+      "alert": "ImmoApp low disk free space",
+      "alertType": "METRIC_BASED_ALERT",
+      "ruleType": "promql_rule",
+      "evalWindow": "5m",
+      "frequency": "1m",
+      "condition": {
+        "compositeQuery": {
+          "queryType": "promql",
+          "panelType": "graph",
+          "promQueries": {
+            "A": {
+              "query": "100 * (node_filesystem_avail_bytes{fstype!~\"tmpfs|overlay\"} / clamp_min(node_filesystem_size_bytes{fstype!~\"tmpfs|overlay\"}, 1))",
+              "disabled": false
+            }
+          }
+        },
+        "selectedQueryName": "A"
+      },
+      "labels": {
+        "severity": "critical",
+        "service": "immoapp-host"
+      },
+      "annotations": {
+        "summary": "Host disk free space is below threshold."
+      },
+      "disabled": false,
+      "preferredChannels": [
+        "immoapp-email"
+      ]
+    }
+  ]
+}

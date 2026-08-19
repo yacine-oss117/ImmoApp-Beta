@@ -1,0 +1,168 @@
+# This repo keeps install/dependency authority under `requirements/`.
+# `pyproject.toml` is used for tool configuration and minimal project metadata.
+[project]
+name = "immoapp"
+version = "1.0.0"
+description = "ImmoApp desktop CRM and matching platform"
+requires-python = ">=3.14"
+
+[tool.mypy]
+# Match the real runtime baseline so stdlib typing reflects Python 3.14.
+python_version = "3.14"
+cache_dir = ".cache/mypy"
+warn_unused_configs = true
+warn_unused_ignores = true
+check_untyped_defs = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+warn_return_any = true
+no_implicit_optional = true
+strict_equality = true
+disallow_any_generics = true
+disallow_subclassing_any = false
+ignore_missing_imports = true
+exclude = [
+    "app/tests/",
+    "tests/",
+    "scripts/",
+    "__pycache__/",
+    "debug_.*\\.py$",
+    "db_connection_check\\.py$",
+    "fix_ternary_schema\\.py$",
+    "verify_schema\\.py$",
+    "server/accounts/migrations/",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "app.workers.*",
+    "app.delegates.*",
+    "app.main_window",
+    "app.main_window_tabs",
+    "app.utils.bootstrap",
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["server.api.*"]
+disable_error_code = ["untyped-decorator"]
+
+[[tool.mypy.overrides]]
+module = ["app.views.*", "app.widgets.*"]
+disallow_subclassing_any = false
+
+[[tool.mypy.overrides]]
+module = ["app.services.api_client", "app.utils.time_service_helpers"]
+disable_error_code = ["import-untyped"]
+
+[[tool.mypy.overrides]]
+module = [
+    "server.accounts.*",
+    "server.tests",
+    "server.api.apps",
+]
+disallow_subclassing_any = false
+
+[[tool.mypy.overrides]]
+module = [
+    "server.accounts.admin",
+    "server.accounts.models",
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["server.imports.models"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    # Narrowed service debt residue: thin auth/session compatibility facades are
+    # now type-checked directly; keep ignores only on the still-heavy modules.
+    "server.services.compliance_jobs",
+    "server.services.crm_contracts",
+    "server.services.demandes",
+    "server.services.diagnostics_keys",
+    "server.services.match_jobs",
+    "server.services.offers",
+    "server.services.record_acl",
+]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = [
+    "server.pg.schema",
+    "server.pg.simulation_seed",
+    "server.pg.tenant_fk_hardening",
+]
+ignore_errors = true
+
+[tool.pytest.ini_options]
+testpaths = ["app/tests/server_tests", "app/tests/ui_tests", "app/tests/e2e_desktop", "tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short --strict-markers"
+cache_dir = ".cache/pytest"
+norecursedirs = [".cache", ".git", ".venv", "venv", "build", "dist"]
+filterwarnings = [
+  "ignore:.*WindowsSelectorEventLoopPolicy.*:DeprecationWarning:daphne.*",
+  "ignore:.*set_event_loop_policy.*:DeprecationWarning:daphne.*",
+  "ignore:.*_UnionGenericAlias.*:DeprecationWarning:drf_spectacular.*",
+]
+markers = [
+  "ui: requires PySide6/Qt (UI tests)",
+  "perf: long-running performance/benchmark tests",
+  "integration: tests that require DB/infra and cross-layer behavior",
+  "slow: high-latency tests excluded from fast lanes",
+  "e2e: end-to-end tests spanning multiple subsystems",
+  "e2e_smoke: native desktop E2E smoke journeys for PR/manual validation",
+  "e2e_nightly: broader native desktop E2E journeys for nightly coverage",
+  "hub_manager_auth: Hub Manager owner/admin login gate E2E coverage",
+  "hub_manager_conflict: Hub Manager installed-runtime conflict proof E2E coverage",
+  "hub_manager_delete_data: disposable Hub Manager delete-data E2E coverage",
+  "hub_manager_owner_lifecycle: Hub Manager first-owner lifecycle E2E coverage",
+  "hub_manager_safe_controls: Hub Manager safe control real-effect E2E coverage",
+  "hub_manager_maintenance: Hub Manager owner maintenance real-effect E2E coverage",
+  "hub_manager_docker_bootstrap: installed runtime artifact bootstrap through an existing Docker-backed Hub",
+  "installed_desktop: installed ImmoApp executable and front-door E2E coverage",
+  "installed_hub_manager: installed ImmoApp Hub Manager executable E2E coverage",
+  "installed_hub_manager_elevated: installed Hub Manager controls requiring an elevated runner",
+  "hub_manager_powershell_guard: direct PowerShell protected action guard E2E coverage",
+  "hub_manager_support: Hub Manager support bundle E2E coverage",
+  "owner_onboarding: first-owner registration, approval, activation, and desktop entry E2E coverage",
+  "nightly: tests intended only for nightly schedules"
+]
+
+[tool.black]
+line-length = 100
+target-version = ["py313", "py314"]
+extend-exclude = '''
+(
+    ^/\.cache/
+  | ^/\.hypothesis/
+  | ^/\.tmp/
+  | ^/scripts/benchmark_outputs/
+  | ^/scripts/perf_outputs/
+  | ^/scripts/profiling/
+)
+'''
+
+[tool.ruff]
+line-length = 100
+target-version = "py314"
+cache-dir = ".cache/ruff"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = [
+    "E501",
+    # Mypy/typeshed support for Python 3.14 stdlib typing is still catching up.
+    "UP017",
+    "UP035",
+    # Keep runtime target on Python 3.14 without forcing broad PEP 695 refactors yet.
+    "UP040",
+    "UP046",
+    "UP047",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]

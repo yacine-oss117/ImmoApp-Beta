@@ -1,0 +1,88 @@
+#!/bin/sh
+set -eu
+. /opt/immoapp/runtime/bin/managed-hub-common
+
+init_statuses
+verify_identity || true
+ensure_docker_daemon status || true
+verify_compose_payload || true
+services_json="[]"
+failures_json="[]"
+if [ "$docker_info_status" = "GO" ] && [ "$compose_payload_status" = "GO" ]; then
+  check_compose_project_present || true
+  services_json="$(json_services_fast)"
+  failures_json="$(json_failures_fast)"
+  check_compose_services_fast || true
+fi
+
+backup_root="${IMMOAPP_MANAGED_BACKUP_ROOT:-/mnt/c/ProgramData/ImmoApp/backups/managed-runtime}"
+case "$backup_root" in
+  /mnt/c/ProgramData/ImmoApp/backups/managed-runtime|/mnt/c/ProgramData/ImmoApp/backups/managed-runtime/*) ;;
+  *)
+    emit_payload "NO-GO" "managed_wsl2_backup_root_not_approved" "NO-GO" "NO-GO" "$services_json" "$failures_json"
+    exit 51
+    ;;
+esac
+
+if [ "$distro_identity_status" != "GO" ] || [ "$docker_info_status" != "GO" ] || [ "$compose_cli_status" != "GO" ] || [ "$compose_service_status" != "GO" ]; then
+  emit_payload "NO-GO" "managed_wsl2_backup_runtime_not_ready" "NO-GO" "NO-GO" "$services_json" "$failures_json"
+  exit 52
+fi
+
+backup_id="$(date -u +%Y%m%dT%H%M%SZ)-$PPID-$$"
+work_dir="$backup_root/$backup_id.work"
+archive_path="$backup_root/$backup_id.tar.gz"
+manifest_path="$work_dir/manifest.json"
+database_dump="$work_dir/database/immoapp.dump"
+storage_dir="$work_dir/storage"
+
+if [ -e "$work_dir" ] || [ -e "$archive_path" ]; then
+  emit_payload "NO-GO" "managed_wsl2_backup_output_exists" "NO-GO" "NO-GO" "$services_json" "$failures_json"
+  exit 53
+fi
+
+mkdir -p "$work_dir/database" "$storage_dir" "$backup_root"
+if ! run_with_timeout "$compose_up_timeout" "$runtime_root/logs/managed-backup-db-dump.out" \
+  sh -ec "docker compose -f '$compose_file' -p '$project_name' exec -T db sh -ec 'PGPASSWORD=\"\$POSTGRES_PASSWORD\" pg_dump -h 127.0.0.1 -U \"\$POSTGRES_USER\" -d \"\$POSTGRES_DB\" -Fc' > '$database_dump'"; then
+  emit_payload "NO-GO" "managed_wsl2_backup_database_dump_failed" "NO-GO" "NO-GO" "$services_json" "$failures_json"
+  exit 54
+fi
+if [ ! -s "$database_dump" ]; then
+  emit_payload "NO-GO" "managed_wsl2_backup_database_dump_empty" "NO-GO" "NO-GO" "$services_json" "$failures_json"
+  exit 55
+fi
+
+if ! run_with_timeout "$compose_up_timeout" "$runtime_root/logs/managed-backup-minio-mirror.out" \
+  docker compose -f "$compose_file" -p "$project_name" run --rm --no-deps \
+    -v "$storage_dir:/backup/storage" \
+    --entrypoint sh minio-init -ec \
+    'mc alias set backupsrc http://minio:9000 "$MINIO_ROOT_USER" "$MINIO_ROOT_PASSWORD" >/dev/null && mc mirror --overwrite "backupsrc/${STORAGE_BUCKET:-immoapp}" /backup/storage'; then
+  emit_payload "NO-GO" "managed_wsl2_backup_object_mirror_failed" "NO-GO" "NO-GO" "$services_json" "$failures_json"
+  exit 56
+fi
+
+db_sha="$(sha256_file "$database_dump")"
+storage_count="$(find "$storage_dir" -type f 2>/dev/null | wc -l | tr -d ' ')"
+cat > "$manifest_path" <<EOF
+{"kind":"immoapp_managed_wsl2_runtime_backup_manifest","schema_version":1,"backup_id":"$(json_escape "$backup_id")","created_at_utc":"$(date -u +%Y-%m-%dT%H:%M:%SZ)","compose_project":"$(json_escape "$project_name")","database_dump":"database/immoapp.dump","database_dump_sha256":"$(json_escape "$db_sha")","storage_object_count":$storage_count,"agency_install_status":"NO_GO","public_beta_status":"NO_GO"}
+EOF
+
+if ! run_with_timeout "$compose_up_timeout" "$runtime_root/logs/managed-backup-archive.out" tar -czf "$archive_path" -C "$work_dir" .; then
+  emit_payload "NO-GO" "managed_wsl2_backup_archive_failed" "NO-GO" "NO-GO" "$services_json" "$failures_json"
+  exit 57
+fi
+archive_sha="$(sha256_file "$archive_path")"
+archive_bytes="$(wc -c < "$archive_path" | tr -d ' ')"
+rm -rf "$work_dir"
+
+printf '{"kind":"immoapp_managed_wsl2_runtime_backup_evidence","schema_version":1,"backup_status":"GO","reason_code":"managed_wsl2_backup_go","backup_id":"%s","backup_bundle_path":"%s","backup_bundle_wsl_path":"%s","backup_bundle_sha256":"%s","backup_bundle_bytes":%s,"database_dump_sha256":"%s","storage_object_count":%s,"work_dir_removed":true,"distro_identity_status":"%s","docker_daemon_status":"%s","docker_info_status":"%s","compose_cli_status":"%s","compose_up_status":"%s","compose_service_status":"%s","service_status":"GO","services":%s,"failing_services":%s,"proof_result":"GO","agency_install_status":"NO_GO","public_beta_status":"NO_GO"}\n' \
+  "$(json_escape "$backup_id")" \
+  "$(json_escape "$(printf "%s" "$archive_path" | sed 's|^/mnt/c|C:|; s|/|\\|g')")" \
+  "$(json_escape "$archive_path")" \
+  "$(json_escape "$archive_sha")" \
+  "$archive_bytes" \
+  "$(json_escape "$db_sha")" \
+  "$storage_count" \
+  "$distro_identity_status" "$docker_daemon_status" "$docker_info_status" "$compose_cli_status" "$compose_up_status" "$compose_service_status" \
+  "$services_json" "$failures_json"
+exit 0

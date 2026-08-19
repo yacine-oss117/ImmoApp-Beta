@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+. /opt/immoapp/runtime/bin/managed-hub-common
+
+init_statuses
+ensure_docker_daemon status || true
+if [ "$docker_info_status" != "GO" ] || [ ! -f "$compose_file" ]; then
+  printf '{"kind":"immoapp_managed_wsl2_runtime_logs","schema_version":1,"logs_status":"NO-GO","reason_code":"managed_wsl2_runtime_logs_failed","tail_lines":%s,"compose_file":"%s","compose_project":"%s","logs":"","proof_result":"NO-GO","agency_install_status":"NO_GO","public_beta_status":"NO_GO"}\n' "${IMMOAPP_MANAGED_LOG_TAIL:-200}" "$(json_escape "$compose_file")" "$(json_escape "$project_name")"
+  exit 1
+fi
+log_capture="$runtime_root/logs/docker-compose-logs.capture"
+if capture_with_timeout "$command_timeout" "$runtime_root/logs/docker-compose-logs.out" docker compose -f "$compose_file" -p "$project_name" logs --no-color --tail="${IMMOAPP_MANAGED_LOG_TAIL:-200}" >"$log_capture"; then
+  log_text="$(cat "$log_capture" 2>/dev/null || true)"
+  logs_status="GO"
+  proof_result="GO"
+  reason_code="managed_wsl2_runtime_logs_collected"
+else
+  log_text="$(cat "$log_capture" "$runtime_root/logs/docker-compose-logs.out" 2>/dev/null || true)"
+  logs_status="NO-GO"
+  proof_result="NO-GO"
+  reason_code="managed_wsl2_runtime_logs_failed"
+fi
+escaped="$(json_escape "$log_text")"
+printf '{"kind":"immoapp_managed_wsl2_runtime_logs","schema_version":1,"logs_status":"%s","reason_code":"%s","tail_lines":%s,"compose_file":"%s","compose_project":"%s","logs":"%s","proof_result":"%s","agency_install_status":"NO_GO","public_beta_status":"NO_GO"}\n' "$logs_status" "$reason_code" "${IMMOAPP_MANAGED_LOG_TAIL:-200}" "$(json_escape "$compose_file")" "$(json_escape "$project_name")" "$escaped" "$proof_result"
+if [ "$proof_result" != "GO" ]; then
+  exit 1
+fi
+exit 0

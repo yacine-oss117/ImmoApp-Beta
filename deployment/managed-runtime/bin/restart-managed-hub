@@ -1,0 +1,4 @@
+#!/bin/sh
+set -eu
+/opt/immoapp/runtime/bin/stop-managed-hub >/dev/null 2>&1 || true
+exec /opt/immoapp/runtime/bin/start-managed-hub

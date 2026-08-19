@@ -1,0 +1,680 @@
+#!/bin/sh
+set -eu
+
+runtime_root="${IMMOAPP_RUNTIME_ROOT:-/opt/immoapp/runtime}"
+compose_file="${IMMOAPP_MANAGED_COMPOSE_FILE:-$runtime_root/compose/compose.yaml}"
+project_name="${IMMOAPP_MANAGED_COMPOSE_PROJECT:-immoapp-managed-hub}"
+image_archive="${IMMOAPP_MANAGED_IMAGE_ARCHIVE:-/mnt/c/ProgramData/ImmoApp/runtime/images/immoapp-runtime-images.tar}"
+image_inventory="${IMMOAPP_MANAGED_IMAGE_INVENTORY:-/mnt/c/ProgramData/ImmoApp/config/managed_wsl2_runtime_image_bundle_inventory.json}"
+front_door_url="${IMMOAPP_HUB_FRONT_DOOR_URL:-http://127.0.0.1:8000}"
+front_door_probe_url="${IMMOAPP_MANAGED_FRONT_DOOR_PROBE_URL:-http://127.0.0.1:${IMMOAPP_HUB_FRONT_DOOR_PORT:-8000}}"
+daemon_timeout="${IMMOAPP_DOCKER_DAEMON_TIMEOUT_SECONDS:-45}"
+command_timeout="${IMMOAPP_RUNTIME_COMMAND_TIMEOUT_SECONDS:-20}"
+compose_up_timeout="${IMMOAPP_COMPOSE_UP_TIMEOUT_SECONDS:-120}"
+service_readiness_timeout="${IMMOAPP_SERVICE_READINESS_TIMEOUT_SECONDS:-300}"
+service_readiness_interval="${IMMOAPP_SERVICE_READINESS_INTERVAL_SECONDS:-3}"
+caddy_bind_host="${IMMOAPP_CADDY_BIND_HOST:-127.0.0.1}"
+required_services="db rabbitmq valkey minio clamav openbao web worker worker-import worker-rebuild worker-match beat caddy"
+runtime_secrets_dir="${IMMOAPP_RUNTIME_SECRETS_DIR:-$runtime_root/secrets}"
+openbao_token_file="$runtime_secrets_dir/openbao.token"
+openbao_unseal_file="$runtime_secrets_dir/openbao.unseal"
+openbao_approle_file="$runtime_secrets_dir/openbao-approle.json"
+runtime_state_dir="${IMMOAPP_RUNTIME_STATE_DIR:-$runtime_root/state}"
+loaded_image_archive_marker="$runtime_state_dir/image_archive_sha256_loaded"
+keepalive_pid_file="$runtime_state_dir/managed-hub-keepalive.pid"
+
+mkdir -p "$runtime_root/logs"
+
+json_escape() {
+  printf "%s" "${1:-}" |
+    LC_ALL=C tr -d '\000-\010\013\014\016-\037' |
+    tr '\011\012\015' '   ' |
+    sed 's/\\/\\\\/g; s/"/\\"/g'
+}
+
+json_array_from_words() {
+  first=1
+  printf "["
+  for item in $1; do
+    if [ "$first" -eq 0 ]; then printf ","; fi
+    first=0
+    printf '"%s"' "$(json_escape "$item")"
+  done
+  printf "]"
+}
+
+json_services() {
+  first=1
+  printf "["
+  for svc in $required_services; do
+    safe_svc="$(printf "%s" "$svc" | tr '/:' '__')"
+    cid="$(capture_with_timeout "$command_timeout" "$runtime_root/logs/docker-compose-ps-$safe_svc.out" docker compose -f "$compose_file" -p "$project_name" ps -q "$svc" | head -n 1 || true)"
+    state="missing"
+    health=""
+    status="NO-GO"
+    if [ -n "$cid" ]; then
+      state="$(capture_with_timeout "$command_timeout" "$runtime_root/logs/docker-inspect-state-$safe_svc.out" docker inspect -f '{{.State.Status}}' "$cid" || true)"
+      health="$(capture_with_timeout "$command_timeout" "$runtime_root/logs/docker-inspect-health-$safe_svc.out" docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$cid" || true)"
+      if [ "$state" = "running" ] && { [ -z "$health" ] || [ "$health" = "healthy" ]; }; then
+        status="GO"
+      fi
+    fi
+    if [ "$first" -eq 0 ]; then printf ","; fi
+    first=0
+    printf '{"name":"%s","state":"%s","health":"%s","status":"%s"}' "$(json_escape "$svc")" "$(json_escape "$state")" "$(json_escape "$health")" "$status"
+  done
+  printf "]"
+}
+
+json_failures() {
+  first=1
+  printf "["
+  for svc in $required_services; do
+    safe_svc="$(printf "%s" "$svc" | tr '/:' '__')"
+    cid="$(capture_with_timeout "$command_timeout" "$runtime_root/logs/docker-compose-ps-failure-$safe_svc.out" docker compose -f "$compose_file" -p "$project_name" ps -q "$svc" | head -n 1 || true)"
+    state="missing"
+    health=""
+    reason="service_missing"
+    if [ -n "$cid" ]; then
+      state="$(capture_with_timeout "$command_timeout" "$runtime_root/logs/docker-inspect-state-failure-$safe_svc.out" docker inspect -f '{{.State.Status}}' "$cid" || true)"
+      health="$(capture_with_timeout "$command_timeout" "$runtime_root/logs/docker-inspect-health-failure-$safe_svc.out" docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{end}}' "$cid" || true)"
+      if [ "$state" = "running" ] && { [ -z "$health" ] || [ "$health" = "healthy" ]; }; then
+        continue
+      fi
+      reason="service_not_ready"
+    fi
+    if [ "$first" -eq 0 ]; then printf ","; fi
+    first=0
+    printf '{"service":"%s","state":"%s","health":"%s","reason":"%s"}' "$(json_escape "$svc")" "$(json_escape "$state")" "$(json_escape "$health")" "$reason"
+  done
+  printf "]"
+}
+
+json_services_fast() {
+  out="$runtime_root/logs/docker-compose-ps-json-services-fast.out"
+  if ! run_with_timeout "$command_timeout" "$out" docker compose -f "$compose_file" -p "$project_name" ps --format json; then
+    json_services
+    return 0
+  fi
+  compose_up_status="GO"
+  if ! command -v python3 >/dev/null 2>&1; then
+    json_services
+    return 0
+  fi
+  python3 - "$out" $required_services <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+required = list(sys.argv[2:])
+items = {}
+with open(path, "r", encoding="utf-8") as fh:
+    for raw in fh:
+        raw = raw.strip()
+        if not raw:
+            continue
+        item = json.loads(raw)
+        service = item.get("Service") or ""
+        if not service:
+            labels = item.get("Labels") or ""
+            for part in labels.split(","):
+                if part.startswith("com.docker.compose.service="):
+                    service = part.split("=", 1)[1]
+                    break
+        if service:
+            items[service] = item
+services = []
+for service in required:
+    item = items.get(service) or {}
+    state = (item.get("State") or item.get("Status") or "missing").lower()
+    health = (item.get("Health") or "").lower()
+    status = "GO" if state == "running" and health not in {"starting", "unhealthy"} else "NO-GO"
+    services.append({"name": service, "state": state, "health": health, "status": status})
+print(json.dumps(services, separators=(",", ":")))
+PY
+}
+
+json_failures_fast() {
+  out="$runtime_root/logs/docker-compose-ps-json-failures-fast.out"
+  if ! run_with_timeout "$command_timeout" "$out" docker compose -f "$compose_file" -p "$project_name" ps --format json; then
+    json_failures
+    return 0
+  fi
+  if ! command -v python3 >/dev/null 2>&1; then
+    json_failures
+    return 0
+  fi
+  python3 - "$out" $required_services <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+required = list(sys.argv[2:])
+items = {}
+with open(path, "r", encoding="utf-8") as fh:
+    for raw in fh:
+        raw = raw.strip()
+        if not raw:
+            continue
+        item = json.loads(raw)
+        service = item.get("Service") or ""
+        if not service:
+            labels = item.get("Labels") or ""
+            for part in labels.split(","):
+                if part.startswith("com.docker.compose.service="):
+                    service = part.split("=", 1)[1]
+                    break
+        if service:
+            items[service] = item
+failures = []
+for service in required:
+    item = items.get(service) or {}
+    state = (item.get("State") or item.get("Status") or "missing").lower()
+    health = (item.get("Health") or "").lower()
+    if state == "running" and health not in {"starting", "unhealthy"}:
+        continue
+    reason = "service_missing" if not item else "service_not_ready"
+    failures.append({"service": service, "state": state, "health": health, "reason": reason})
+print(json.dumps(failures, separators=(",", ":")))
+PY
+}
+
+extract_json_string() {
+  key="$1"
+  file="$2"
+  sed -n "s/.*\"$key\"[[:space:]]*:[[:space:]]*\"\([^\"]*\)\".*/\1/p" "$file" | head -n 1
+}
+
+inventory_image_tags() {
+  sed -n 's/.*"tag"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$image_inventory" | grep -v '^[[:space:]]*$' || true
+}
+
+sha256_file() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | awk '{print tolower($1)}'
+    return
+  fi
+  if command -v openssl >/dev/null 2>&1; then
+    openssl dgst -sha256 "$1" | awk '{print tolower($NF)}'
+    return
+  fi
+  echo ""
+}
+
+run_with_timeout() {
+  limit="$1"
+  out="$2"
+  shift 2
+  rm -f "$out" "$out.exit"
+  (
+    cd "$runtime_root"
+    "$@" >"$out" 2>&1
+    printf "%s" "$?" >"$out.exit"
+  ) &
+  pid="$!"
+  started_at="$(date +%s)"
+  while kill -0 "$pid" 2>/dev/null; do
+    elapsed=$(( $(date +%s) - started_at ))
+    if [ "$elapsed" -ge "$limit" ]; then
+      kill "$pid" 2>/dev/null || true
+      sleep 1
+      kill -9 "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+      return 124
+    fi
+    sleep 1
+  done
+  wait "$pid" 2>/dev/null || true
+  if [ -f "$out.exit" ]; then
+    code="$(cat "$out.exit" 2>/dev/null || printf "1")"
+    case "$code" in
+      ""|*[!0-9]*) return 1 ;;
+      *) return "$code" ;;
+    esac
+  fi
+  return 1
+}
+
+capture_with_timeout() {
+  limit="$1"
+  out="$2"
+  shift 2
+  if run_with_timeout "$limit" "$out" "$@"; then
+    cat "$out" 2>/dev/null || true
+    return 0
+  else
+    code="$?"
+    cat "$out" 2>/dev/null || true
+    return "$code"
+  fi
+}
+
+docker_info_ok() {
+  if run_with_timeout "$command_timeout" "$runtime_root/logs/docker-info.out" docker info; then
+    docker_daemon_status="GO"
+    docker_info_status="GO"
+    return 0
+  fi
+  return 1
+}
+
+ensure_runtime_secrets() {
+  mkdir -p "$runtime_secrets_dir"
+  chmod 755 "$runtime_secrets_dir" 2>/dev/null || true
+  if [ -e "$openbao_token_file" ]; then
+    chmod 600 "$openbao_token_file" 2>/dev/null || true
+  fi
+  if [ -e "$openbao_unseal_file" ]; then
+    chmod 600 "$openbao_unseal_file" 2>/dev/null || true
+  fi
+  if [ -e "$openbao_approle_file" ]; then
+    chmod 644 "$openbao_approle_file" 2>/dev/null || true
+  fi
+  return 0
+}
+
+host_path_to_wsl_path() {
+  raw="$1"
+  normalized="$(printf "%s" "$raw" | tr '\\' '/')"
+  case "$normalized" in
+    /mnt/c/ProgramData/ImmoApp/*)
+      printf "%s" "$normalized"
+      return 0
+      ;;
+    C:/ProgramData/ImmoApp/*|c:/ProgramData/ImmoApp/*)
+      suffix="$(printf "%s" "$normalized" | sed 's|^[Cc]:/ProgramData/ImmoApp/||')"
+      printf "/mnt/c/ProgramData/ImmoApp/%s" "$suffix"
+      return 0
+      ;;
+  esac
+  return 1
+}
+
+emit_payload() {
+  proof="$1"
+  reason="$2"
+  service_status="$3"
+  front_partial="${4:-NO-GO}"
+  services_json="${5:-[]}"
+  failures_json="${6:-[]}"
+  printf '{"kind":"immoapp_managed_wsl2_runtime_service_evidence","schema_version":1,"distro_identity_status":"%s","docker_daemon_status":"%s","docker_info_status":"%s","compose_cli_status":"%s","image_archive_status":"%s","image_inventory_status":"%s","image_load_status":"%s","image_presence_status":"%s","compose_payload_status":"%s","compose_pull_policy_status":"%s","compose_up_status":"%s","compose_service_status":"%s","service_status":"%s","front_door_partial_status":"%s","front_door_health_status":"%s","reason_code":"%s","docker_start_attempted":%s,"docker_start_timeout_seconds":%s,"docker_start_elapsed_seconds":%s,"docker_start_exit_code":"%s","docker_start_diagnostics":"%s","service_readiness_timeout_seconds":%s,"service_readiness_elapsed_seconds":%s,"caddy_bind_host":"%s","caddy_bind_mode":"%s","image_archive_path":"%s","image_archive_host_path":"%s","image_archive_wsl_path":"%s","image_archive_sha256":"%s","image_bundle_inventory_path":"%s","image_bundle_inventory_host_path":"%s","image_bundle_inventory_wsl_path":"%s","image_bundle_inventory_sha256":"%s","compose_file":"%s","compose_project":"%s","services":%s,"failing_services":%s,"proof_result":"%s","agency_install_status":"NO_GO","public_beta_status":"NO_GO"}\n' \
+    "$distro_identity_status" "$docker_daemon_status" "$docker_info_status" "$compose_cli_status" "$image_archive_status" "$image_inventory_status" "$image_load_status" "$image_presence_status" "$compose_payload_status" "$compose_pull_policy_status" "$compose_up_status" "$compose_service_status" "$service_status" "$front_partial" "$front_door_health_status" "$reason" "$docker_start_attempted" "$docker_start_timeout_seconds" "$docker_start_elapsed_seconds" "$(json_escape "$docker_start_exit_code")" "$(json_escape "$docker_start_diagnostics")" "$service_readiness_timeout_seconds" "$service_readiness_elapsed_seconds" "$(json_escape "$caddy_bind_host")" "$(json_escape "$caddy_bind_mode")" "$(json_escape "$image_archive")" "$(json_escape "$image_archive_host_path")" "$(json_escape "$image_archive_wsl_path")" "$(json_escape "$image_archive_sha256")" "$(json_escape "$image_inventory")" "$(json_escape "$image_bundle_inventory_host_path")" "$(json_escape "$image_bundle_inventory_wsl_path")" "$(json_escape "$image_inventory_sha256")" "$(json_escape "$compose_file")" "$(json_escape "$project_name")" "$services_json" "$failures_json" "$proof"
+}
+
+init_statuses() {
+  distro_identity_status="NO-GO"
+  docker_daemon_status="NO-GO"
+  docker_info_status="NO-GO"
+  compose_cli_status="NO-GO"
+  image_archive_status="NO-GO"
+  image_inventory_status="NO-GO"
+  image_load_status="not_attempted"
+  image_presence_status="NO-GO"
+  compose_payload_status="NO-GO"
+  compose_pull_policy_status="NO-GO"
+  compose_up_status="NO-GO"
+  compose_service_status="NO-GO"
+  front_door_health_status="NO-GO"
+  image_archive_sha256=""
+  image_inventory_sha256=""
+  image_archive_host_path=""
+  image_archive_wsl_path="$image_archive"
+  image_bundle_inventory_host_path=""
+  image_bundle_inventory_wsl_path="$image_inventory"
+  docker_start_attempted=false
+  docker_start_timeout_seconds="$daemon_timeout"
+  docker_start_elapsed_seconds=0
+  docker_start_exit_code=""
+  docker_start_diagnostics=""
+  service_readiness_timeout_seconds="$service_readiness_timeout"
+  service_readiness_elapsed_seconds=0
+  case "$caddy_bind_host" in
+    127.0.0.1|localhost) caddy_bind_mode="local" ;;
+    0.0.0.0) caddy_bind_mode="lan_all_interfaces" ;;
+    *) caddy_bind_mode="lan_configured_host" ;;
+  esac
+}
+
+verify_identity() {
+  if [ "${WSL_DISTRO_NAME:-}" = "ImmoAppRuntime" ]; then
+    distro_identity_status="GO"
+    return 0
+  fi
+  return 1
+}
+
+ensure_docker_daemon() {
+  if ! command -v docker >/dev/null 2>&1; then
+    return 1
+  fi
+  if run_with_timeout "$command_timeout" "$runtime_root/logs/docker-compose-version.out" docker compose version; then
+    compose_cli_status="GO"
+  fi
+  if docker_info_ok; then
+    return 0
+  fi
+  if [ "${1:-}" != "start" ]; then
+    return 1
+  fi
+  docker_start_attempted=true
+  docker_start_timeout_seconds="$daemon_timeout"
+  docker_start_started_at="$(date +%s)"
+  if command -v systemctl >/dev/null 2>&1 && systemctl list-unit-files docker.service >/dev/null 2>&1; then
+    rm -f "$runtime_root/logs/docker-service-start.exit"
+    (
+      systemctl start docker --no-block >"$runtime_root/logs/docker-service-start.out" 2>&1
+      printf "%s" "$?" >"$runtime_root/logs/docker-service-start.exit"
+    ) &
+    docker_start_pid="$!"
+  elif command -v service >/dev/null 2>&1 && [ -x /etc/init.d/docker ]; then
+    rm -f "$runtime_root/logs/docker-service-start.exit"
+    (
+      service docker start >"$runtime_root/logs/docker-service-start.out" 2>&1
+      printf "%s" "$?" >"$runtime_root/logs/docker-service-start.exit"
+    ) &
+    docker_start_pid="$!"
+  elif command -v dockerd >/dev/null 2>&1; then
+    nohup dockerd >"$runtime_root/logs/dockerd.log" 2>&1 &
+    docker_start_pid="$!"
+  else
+    return 1
+  fi
+  while :; do
+    docker_start_elapsed_seconds=$(( $(date +%s) - docker_start_started_at ))
+    if docker_info_ok; then
+      if [ -f "$runtime_root/logs/docker-service-start.exit" ]; then
+        docker_start_exit_code="$(cat "$runtime_root/logs/docker-service-start.exit" 2>/dev/null || true)"
+      fi
+      return 0
+    fi
+    if [ "$docker_start_elapsed_seconds" -ge "$daemon_timeout" ]; then
+      kill "$docker_start_pid" 2>/dev/null || true
+      sleep 1
+      kill -9 "$docker_start_pid" 2>/dev/null || true
+      docker_start_exit_code="timeout"
+      docker_start_diagnostics="$(
+        { service docker status 2>&1 || true; tail -n 60 "$runtime_root/logs/docker-service-start.out" 2>/dev/null || true; tail -n 60 "$runtime_root/logs/dockerd.log" 2>/dev/null || true; } |
+        tr '\n' ' ' |
+        cut -c 1-4000
+      )"
+      return 2
+    fi
+    sleep 1
+  done
+}
+
+verify_image_bundle() {
+  if [ ! -f "$image_inventory" ]; then
+    return 1
+  fi
+  image_inventory_sha256="$(sha256_file "$image_inventory")"
+  image_bundle_inventory_host_path="$(extract_json_string "image_bundle_inventory_host_path" "$image_inventory")"
+  image_bundle_inventory_wsl_path="$(extract_json_string "image_bundle_inventory_wsl_path" "$image_inventory")"
+  if [ -z "$image_bundle_inventory_wsl_path" ]; then
+    image_bundle_inventory_wsl_path="$image_inventory"
+  fi
+  image_archive_host_path="$(extract_json_string "image_archive_host_path" "$image_inventory")"
+  image_archive_wsl_path="$(extract_json_string "image_archive_wsl_path" "$image_inventory")"
+  if [ -z "$image_archive_wsl_path" ]; then
+    legacy_archive="$(extract_json_string "image_archive_path" "$image_inventory")"
+    if [ -n "$legacy_archive" ]; then
+      image_archive_host_path="$legacy_archive"
+      if ! image_archive_wsl_path="$(host_path_to_wsl_path "$legacy_archive")"; then
+        return 6
+      fi
+    fi
+  fi
+  if [ -z "$image_archive_wsl_path" ]; then
+    return 6
+  fi
+  image_archive="$image_archive_wsl_path"
+  if [ ! -f "$image_archive" ]; then
+    return 2
+  fi
+  expected_sha="$(extract_json_string "image_archive_sha256" "$image_inventory")"
+  if [ -z "$expected_sha" ]; then
+    return 3
+  fi
+  actual_sha="$(sha256_file "$image_archive")"
+  image_archive_sha256="$actual_sha"
+  if [ "$actual_sha" != "$expected_sha" ]; then
+    return 4
+  fi
+  tags="$(inventory_image_tags | tr '\n' ' ')"
+  if [ -z "$tags" ]; then
+    return 5
+  fi
+  image_inventory_status="GO"
+  image_archive_status="GO"
+  return 0
+}
+
+ensure_images_present() {
+  missing=""
+  for tag in $(inventory_image_tags); do
+    safe_tag="$(printf "%s" "$tag" | tr '/:' '__')"
+    if ! run_with_timeout "$command_timeout" "$runtime_root/logs/docker-image-inspect-$safe_tag.out" docker image inspect "$tag"; then
+      missing="$missing $tag"
+    fi
+  done
+  marker_sha=""
+  if [ -f "$loaded_image_archive_marker" ]; then
+    marker_sha="$(cat "$loaded_image_archive_marker" 2>/dev/null || true)"
+  fi
+  if [ -n "$missing" ] || [ "$marker_sha" != "$image_archive_sha256" ]; then
+    if [ "${1:-}" != "start" ]; then
+      return 1
+    fi
+    if run_with_timeout "$compose_up_timeout" "$runtime_root/logs/docker-load.out" docker load -i "$image_archive"; then
+      image_load_status="GO"
+      mkdir -p "$runtime_state_dir"
+      printf "%s\n" "$image_archive_sha256" >"$loaded_image_archive_marker"
+    else
+      image_load_status="NO-GO"
+      return 2
+    fi
+  else
+    image_load_status="not_needed"
+  fi
+  for tag in $(inventory_image_tags); do
+    safe_tag="$(printf "%s" "$tag" | tr '/:' '__')"
+    if ! run_with_timeout "$command_timeout" "$runtime_root/logs/docker-image-inspect-final-$safe_tag.out" docker image inspect "$tag"; then
+      return 3
+    fi
+  done
+  image_presence_status="GO"
+  return 0
+}
+
+verify_compose_payload() {
+  if [ ! -f "$compose_file" ]; then
+    return 1
+  fi
+  for tag in $(inventory_image_tags); do
+    if ! grep -F "image: $tag" "$compose_file" >/dev/null 2>&1; then
+      return 2
+    fi
+  done
+  if grep -E '^[[:space:]]+build:' "$compose_file" >/dev/null 2>&1; then
+    return 4
+  fi
+  service_names="$(awk '
+    /^services:[[:space:]]*$/ { in_services=1; next }
+    /^[^[:space:]]/ { if (in_services) exit }
+    in_services && $0 ~ /^  [A-Za-z0-9_-]+:/ {
+      name=$1
+      sub(":$", "", name)
+      print name
+    }
+  ' "$compose_file")"
+  if [ -z "$service_names" ]; then
+    return 3
+  fi
+  for service_name in $service_names; do
+    awk -v svc="$service_name" '
+      /^services:[[:space:]]*$/ { in_services=1; next }
+      /^[^[:space:]]/ { if (in_service) exit; if (in_services) exit }
+      in_services && $0 ~ "^  " svc ":[[:space:]]*$" { in_service=1; next }
+      in_service && $0 ~ /^  [A-Za-z0-9_-]+:/ { exit }
+      in_service && $0 ~ /^[[:space:]]+pull_policy:[[:space:]]+never[[:space:]]*$/ { found=1 }
+      END { exit(found ? 0 : 1) }
+    ' "$compose_file" || return 3
+  done
+  compose_payload_status="GO"
+  compose_pull_policy_status="GO"
+  return 0
+}
+
+run_compose_up() {
+  if run_with_timeout "$compose_up_timeout" "$runtime_root/logs/docker-compose-up.out" docker compose -f "$compose_file" -p "$project_name" up -d; then
+    compose_up_status="GO"
+    return 0
+  fi
+  return 1
+}
+
+run_one_shot_service() {
+  svc="$1"
+  safe_svc="$(printf "%s" "$svc" | tr '/:' '__')"
+  run_with_timeout "$compose_up_timeout" "$runtime_root/logs/docker-compose-one-shot-$safe_svc.out" \
+    docker compose -f "$compose_file" -p "$project_name" up --force-recreate --no-deps "$svc"
+}
+
+run_compose_bootstrap_gates() {
+  if ! run_with_timeout "$compose_up_timeout" "$runtime_root/logs/docker-compose-durable-dependencies.out" \
+    docker compose -f "$compose_file" -p "$project_name" up -d rabbitmq db valkey openbao minio clamav; then
+    return 1
+  fi
+  for svc in openbao-init openbao-seed db-app-role-init db-schema-prepare minio-init app-data-init; do
+    if ! run_one_shot_service "$svc"; then
+      return 1
+    fi
+  done
+  return 0
+}
+
+stop_keepalive() {
+  if [ ! -f "$keepalive_pid_file" ]; then
+    return 0
+  fi
+  pid="$(cat "$keepalive_pid_file" 2>/dev/null || true)"
+  rm -f "$keepalive_pid_file"
+  case "$pid" in
+    ""|*[!0-9]*) return 0 ;;
+  esac
+  kill "$pid" 2>/dev/null || true
+  return 0
+}
+
+check_compose_project_present() {
+  if capture_with_timeout "$command_timeout" "$runtime_root/logs/docker-compose-ps-all.out" docker compose -f "$compose_file" -p "$project_name" ps -q | grep -q .; then
+    compose_up_status="GO"
+    return 0
+  fi
+  return 1
+}
+
+check_compose_services() {
+  failures="$(json_failures)"
+  if [ "$failures" = "[]" ]; then
+    compose_service_status="GO"
+    return 0
+  fi
+  return 1
+}
+
+check_compose_services_fast() {
+  out="$runtime_root/logs/docker-compose-ps-json-fast.out"
+  if ! run_with_timeout "$command_timeout" "$out" docker compose -f "$compose_file" -p "$project_name" ps --format json; then
+    return 1
+  fi
+  if ! command -v python3 >/dev/null 2>&1; then
+    check_compose_services
+    return $?
+  fi
+  if python3 - "$out" $required_services <<'PY'
+import json
+import sys
+
+path = sys.argv[1]
+required = set(sys.argv[2:])
+seen = set()
+bad = []
+with open(path, "r", encoding="utf-8") as fh:
+    for raw in fh:
+        raw = raw.strip()
+        if not raw:
+            continue
+        item = json.loads(raw)
+        service = item.get("Service") or ""
+        state = (item.get("State") or item.get("Status") or "").lower()
+        health = (item.get("Health") or "").lower()
+        if not service:
+            labels = item.get("Labels") or ""
+            for part in labels.split(","):
+                if part.startswith("com.docker.compose.service="):
+                    service = part.split("=", 1)[1]
+                    break
+        if not service:
+            continue
+        seen.add(service)
+        if state != "running" or health in {"starting", "unhealthy"}:
+            bad.append(service)
+missing = required - seen
+if missing or bad:
+    sys.exit(1)
+PY
+  then
+    compose_up_status="GO"
+    compose_service_status="GO"
+    return 0
+  fi
+  return 1
+}
+
+wait_for_service_readiness() {
+  readiness_started_at="$(date +%s)"
+  while :; do
+    service_readiness_elapsed_seconds=$(( $(date +%s) - readiness_started_at ))
+    if check_compose_services_fast; then
+      return 0
+    fi
+    service_readiness_elapsed_seconds=$(( $(date +%s) - readiness_started_at ))
+    if [ "$service_readiness_elapsed_seconds" -ge "$service_readiness_timeout" ]; then
+      return 1
+    fi
+    sleep "$service_readiness_interval"
+  done
+}
+
+wait_for_front_door_readiness() {
+  front_door_started_at="$(date +%s)"
+  while :; do
+    if probe_front_door; then
+      return 0
+    fi
+    front_door_elapsed_seconds=$(( $(date +%s) - front_door_started_at ))
+    if [ "$front_door_elapsed_seconds" -ge "$service_readiness_timeout" ]; then
+      return 1
+    fi
+    sleep "$service_readiness_interval"
+  done
+}
+
+probe_front_door() {
+  if ! command -v curl >/dev/null 2>&1; then
+    return 1
+  fi
+  health_code="$(curl --connect-timeout 3 --max-time 8 -fsS -o /dev/null -w '%{http_code}' "$front_door_probe_url/api/v1/health/" 2>/dev/null || true)"
+  identity_headers="$(mktemp)"
+  identity_body="$(mktemp)"
+  identity_code="$(curl --connect-timeout 3 --max-time 8 -fsS -D "$identity_headers" -o "$identity_body" -w '%{http_code}' "$front_door_probe_url/api/v1/hub/front-door/identity/" 2>/dev/null || true)"
+  header="$(grep -i '^X-ImmoApp-Front-Door:' "$identity_headers" 2>/dev/null | tail -n 1 | awk -F: '{gsub(/^[ \t]+|[ \t\r]+$/, "", $2); print tolower($2)}')"
+  kind="$(sed -n 's/.*"kind"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$identity_body" | head -n 1)"
+  rm -f "$identity_headers" "$identity_body"
+  if [ "$health_code" = "200" ] && [ "$identity_code" = "200" ] && [ "$header" = "caddy" ] && [ "$kind" = "immoapp_hub_front_door_identity" ]; then
+    front_door_health_status="GO"
+    return 0
+  fi
+  return 1
+}

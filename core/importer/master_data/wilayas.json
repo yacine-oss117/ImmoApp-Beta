@@ -1,0 +1,408 @@
+{
+    "01": {
+        "code": "01",
+        "fr": "Adrar",
+        "ar": "أدرار",
+        "aliases": [
+            "adrar"
+        ]
+    },
+    "02": {
+        "code": "02",
+        "fr": "Chlef",
+        "ar": "الشلف",
+        "aliases": [
+            "chlef",
+            "cheliff",
+            "el asnam"
+        ]
+    },
+    "03": {
+        "code": "03",
+        "fr": "Laghouat",
+        "ar": "الأغواط",
+        "aliases": [
+            "laghouat"
+        ]
+    },
+    "04": {
+        "code": "04",
+        "fr": "Oum El Bouaghi",
+        "ar": "أم البواقي",
+        "aliases": [
+            "oum el bouaghi",
+            "oum-el-bouaghi"
+        ]
+    },
+    "05": {
+        "code": "05",
+        "fr": "Batna",
+        "ar": "باتنة",
+        "aliases": [
+            "batna"
+        ]
+    },
+    "06": {
+        "code": "06",
+        "fr": "Béjaïa",
+        "ar": "بجاية",
+        "aliases": [
+            "bejaia",
+            "bougie",
+            "bgayet"
+        ]
+    },
+    "07": {
+        "code": "07",
+        "fr": "Biskra",
+        "ar": "بسكرة",
+        "aliases": [
+            "biskra"
+        ]
+    },
+    "08": {
+        "code": "08",
+        "fr": "Béchar",
+        "ar": "بشار",
+        "aliases": [
+            "bechar"
+        ]
+    },
+    "09": {
+        "code": "09",
+        "fr": "Blida",
+        "ar": "البليدة",
+        "aliases": [
+            "blida",
+            "el boulaida"
+        ]
+    },
+    "10": {
+        "code": "10",
+        "fr": "Bouira",
+        "ar": "البويرة",
+        "aliases": [
+            "bouira"
+        ]
+    },
+    "11": {
+        "code": "11",
+        "fr": "Tamanrasset",
+        "ar": "تمنراست",
+        "aliases": [
+            "tamanrasset",
+            "tam"
+        ]
+    },
+    "12": {
+        "code": "12",
+        "fr": "Tébessa",
+        "ar": "تبسة",
+        "aliases": [
+            "tebessa"
+        ]
+    },
+    "13": {
+        "code": "13",
+        "fr": "Tlemcen",
+        "ar": "تلمسان",
+        "aliases": [
+            "tlemcen"
+        ]
+    },
+    "14": {
+        "code": "14",
+        "fr": "Tiaret",
+        "ar": "تيارت",
+        "aliases": [
+            "tiaret"
+        ]
+    },
+    "15": {
+        "code": "15",
+        "fr": "Tizi Ouzou",
+        "ar": "تيزي وزو",
+        "aliases": [
+            "tizi ouzou",
+            "tizi-ouzou",
+            "tizi"
+        ]
+    },
+    "16": {
+        "code": "16",
+        "fr": "Alger",
+        "ar": "الجزائر",
+        "aliases": [
+            "alger",
+            "algiers",
+            "el djazair",
+            "الجزائر العاصمة"
+        ]
+    },
+    "17": {
+        "code": "17",
+        "fr": "Djelfa",
+        "ar": "الجلفة",
+        "aliases": [
+            "djelfa"
+        ]
+    },
+    "18": {
+        "code": "18",
+        "fr": "Jijel",
+        "ar": "جيجل",
+        "aliases": [
+            "jijel"
+        ]
+    },
+    "19": {
+        "code": "19",
+        "fr": "Sétif",
+        "ar": "سطيف",
+        "aliases": [
+            "setif"
+        ]
+    },
+    "20": {
+        "code": "20",
+        "fr": "Saïda",
+        "ar": "سعيدة",
+        "aliases": [
+            "saida"
+        ]
+    },
+    "21": {
+        "code": "21",
+        "fr": "Skikda",
+        "ar": "سكيكدة",
+        "aliases": [
+            "skikda"
+        ]
+    },
+    "22": {
+        "code": "22",
+        "fr": "Sidi Bel Abbès",
+        "ar": "سيدي بلعباس",
+        "aliases": [
+            "sidi bel abbes",
+            "sba"
+        ]
+    },
+    "23": {
+        "code": "23",
+        "fr": "Annaba",
+        "ar": "عنابة",
+        "aliases": [
+            "annaba",
+            "bone"
+        ]
+    },
+    "24": {
+        "code": "24",
+        "fr": "Guelma",
+        "ar": "قالمة",
+        "aliases": [
+            "guelma"
+        ]
+    },
+    "25": {
+        "code": "25",
+        "fr": "Constantine",
+        "ar": "قسنطينة",
+        "aliases": [
+            "constantine",
+            "cirta"
+        ]
+    },
+    "26": {
+        "code": "26",
+        "fr": "Médéa",
+        "ar": "المدية",
+        "aliases": [
+            "medea"
+        ]
+    },
+    "27": {
+        "code": "27",
+        "fr": "Mostaganem",
+        "ar": "مستغانم",
+        "aliases": [
+            "mostaganem"
+        ]
+    },
+    "28": {
+        "code": "28",
+        "fr": "M'Sila",
+        "ar": "المسيلة",
+        "aliases": [
+            "msila",
+            "m'sila"
+        ]
+    },
+    "29": {
+        "code": "29",
+        "fr": "Mascara",
+        "ar": "معسكر",
+        "aliases": [
+            "mascara"
+        ]
+    },
+    "30": {
+        "code": "30",
+        "fr": "Ouargla",
+        "ar": "ورقلة",
+        "aliases": [
+            "ouargla"
+        ]
+    },
+    "31": {
+        "code": "31",
+        "fr": "Oran",
+        "ar": "وهران",
+        "aliases": [
+            "oran",
+            "wahran"
+        ]
+    },
+    "32": {
+        "code": "32",
+        "fr": "El Bayadh",
+        "ar": "البيض",
+        "aliases": [
+            "el bayadh"
+        ]
+    },
+    "33": {
+        "code": "33",
+        "fr": "Illizi",
+        "ar": "إليزي",
+        "aliases": [
+            "illizi"
+        ]
+    },
+    "34": {
+        "code": "34",
+        "fr": "Bordj Bou Arréridj",
+        "ar": "برج بوعريريج",
+        "aliases": [
+            "bordj bou arreridj",
+            "bba",
+            "bordj"
+        ]
+    },
+    "35": {
+        "code": "35",
+        "fr": "Boumerdès",
+        "ar": "بومرداس",
+        "aliases": [
+            "boumerdes"
+        ]
+    },
+    "36": {
+        "code": "36",
+        "fr": "El Tarf",
+        "ar": "الطارف",
+        "aliases": [
+            "el tarf"
+        ]
+    },
+    "37": {
+        "code": "37",
+        "fr": "Tindouf",
+        "ar": "تندوف",
+        "aliases": [
+            "tindouf"
+        ]
+    },
+    "38": {
+        "code": "38",
+        "fr": "Tissemsilt",
+        "ar": "تيسمسيلت",
+        "aliases": [
+            "tissemsilt"
+        ]
+    },
+    "39": {
+        "code": "39",
+        "fr": "El Oued",
+        "ar": "الوادي",
+        "aliases": [
+            "el oued",
+            "oued souf"
+        ]
+    },
+    "40": {
+        "code": "40",
+        "fr": "Khenchela",
+        "ar": "خنشلة",
+        "aliases": [
+            "khenchela"
+        ]
+    },
+    "41": {
+        "code": "41",
+        "fr": "Souk Ahras",
+        "ar": "سوق أهراس",
+        "aliases": [
+            "souk ahras"
+        ]
+    },
+    "42": {
+        "code": "42",
+        "fr": "Tipaza",
+        "ar": "تيبازة",
+        "aliases": [
+            "tipaza",
+            "tipasa"
+        ]
+    },
+    "43": {
+        "code": "43",
+        "fr": "Mila",
+        "ar": "ميلة",
+        "aliases": [
+            "mila"
+        ]
+    },
+    "44": {
+        "code": "44",
+        "fr": "Aïn Defla",
+        "ar": "عين الدفلى",
+        "aliases": [
+            "ain defla",
+            "ain-defla"
+        ]
+    },
+    "45": {
+        "code": "45",
+        "fr": "Naâma",
+        "ar": "النعامة",
+        "aliases": [
+            "naama"
+        ]
+    },
+    "46": {
+        "code": "46",
+        "fr": "Aïn Témouchent",
+        "ar": "عين تموشنت",
+        "aliases": [
+            "ain temouchent"
+        ]
+    },
+    "47": {
+        "code": "47",
+        "fr": "Ghardaïa",
+        "ar": "غرداية",
+        "aliases": [
+            "ghardaia"
+        ]
+    },
+    "48": {
+        "code": "48",
+        "fr": "Relizane",
+        "ar": "غليزان",
+        "aliases": [
+            "relizane"
+        ]
+    }
+}

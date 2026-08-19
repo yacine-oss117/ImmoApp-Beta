@@ -1,0 +1,150 @@
+#!/bin/sh
+set -eu
+
+if [ "${1:-}" != "--json" ]; then
+  echo "managed_wsl2_runtime_identity_requires_json" >&2
+  exit 2
+fi
+
+runtime_root="${IMMOAPP_RUNTIME_ROOT:-/opt/immoapp/runtime}"
+identity_timeout="${IMMOAPP_RUNTIME_IDENTITY_TIMEOUT_SECONDS:-20}"
+distro_name="${WSL_DISTRO_NAME:-}"
+docker_status="NO-GO"
+docker_info_status="not_checked_pre_start"
+docker_version=""
+compose_cli_status="NO-GO"
+compose_version=""
+engine_kind="missing"
+reason_code="managed_wsl2_docker_cli_missing"
+identity_timed_out=false
+identity_elapsed_seconds=0
+
+mkdir -p "$runtime_root/logs"
+
+run_identity_with_timeout() {
+  limit="$1"
+  out="$2"
+  shift 2
+  rm -f "$out" "$out.exit"
+  kernel_name="$(uname -s 2>/dev/null || printf unknown)"
+  case "$kernel_name" in
+    MINGW*|MSYS*|CYGWIN*)
+      use_coreutils_timeout=false
+      ;;
+    *)
+      use_coreutils_timeout=true
+      ;;
+  esac
+  if [ "$use_coreutils_timeout" = "true" ] && command -v timeout >/dev/null 2>&1 && timeout --help >/dev/null 2>&1; then
+    started_at="$(date +%s)"
+    if timeout -k 1s "${limit}s" "$@" >"$out" 2>&1; then
+      code=0
+    else
+      code="$?"
+    fi
+    identity_elapsed_seconds=$(( $(date +%s) - started_at ))
+    if [ "$code" = "124" ] || [ "$code" = "137" ]; then
+      identity_timed_out=true
+      return 124
+    fi
+    return "$code"
+  fi
+  (
+    "$@" >"$out" 2>&1
+    printf "%s" "$?" >"$out.exit"
+  ) &
+  pid="$!"
+  started_at="$(date +%s)"
+  while kill -0 "$pid" 2>/dev/null; do
+    identity_elapsed_seconds=$(( $(date +%s) - started_at ))
+    if [ "$identity_elapsed_seconds" -ge "$limit" ]; then
+      identity_timed_out=true
+      kill "$pid" 2>/dev/null || true
+      sleep 1
+      kill -9 "$pid" 2>/dev/null || true
+      wait "$pid" 2>/dev/null || true
+      return 124
+    fi
+    sleep 1
+  done
+  wait "$pid" 2>/dev/null || true
+  identity_elapsed_seconds=$(( $(date +%s) - started_at ))
+  if [ -f "$out.exit" ]; then
+    code="$(cat "$out.exit" 2>/dev/null || printf "1")"
+    case "$code" in
+      ""|*[!0-9]*) return 1 ;;
+      *) return "$code" ;;
+    esac
+  fi
+  return 1
+}
+
+capture_identity_with_timeout() {
+  limit="$1"
+  out="$2"
+  shift 2
+  if run_identity_with_timeout "$limit" "$out" "$@"; then
+    cat "$out" 2>/dev/null || true
+    return 0
+  else
+    code="$?"
+    cat "$out" 2>/dev/null || true
+    return "$code"
+  fi
+}
+
+if command -v docker >/dev/null 2>&1; then
+  engine_kind="docker_engine"
+  docker_version_capture="$runtime_root/logs/identity-docker-version.capture"
+  if capture_identity_with_timeout "$identity_timeout" "$runtime_root/logs/identity-docker-version.out" docker --version >"$docker_version_capture"; then
+    version_code=0
+  else
+    version_code="$?"
+  fi
+  docker_version_output="$(cat "$docker_version_capture" "$runtime_root/logs/identity-docker-version.out" 2>/dev/null || true)"
+  docker_version="$(printf "%s" "$docker_version_output" | head -n 1 | tr -d '\r\n"')"
+  if [ "$version_code" = "124" ]; then
+    identity_timed_out=true
+    identity_elapsed_seconds="$identity_timeout"
+    reason_code="managed_wsl2_runtime_identity_timeout"
+  fi
+  if [ "$identity_timed_out" = "false" ]; then
+    if printf "%s" "$docker_version_output" | grep -qi "Docker Desktop"; then
+      engine_kind="docker_desktop_rejected"
+      reason_code="managed_wsl2_docker_desktop_rejected"
+    elif [ -n "$docker_version" ]; then
+      docker_status="GO"
+      reason_code="managed_wsl2_docker_cli_go"
+    else
+      reason_code="managed_wsl2_docker_cli_missing"
+    fi
+  fi
+  if [ "$identity_timed_out" = "false" ]; then
+    compose_version_capture="$runtime_root/logs/identity-docker-compose-version.capture"
+    if capture_identity_with_timeout "$identity_timeout" "$runtime_root/logs/identity-docker-compose-version.out" docker compose version >"$compose_version_capture"; then
+      compose_cli_status="GO"
+      compose_version="$(cat "$compose_version_capture" 2>/dev/null | head -n 1 | tr -d '\r\n"' || true)"
+    else
+      compose_code="$?"
+      compose_version="$(cat "$compose_version_capture" "$runtime_root/logs/identity-docker-compose-version.out" 2>/dev/null | head -n 1 | tr -d '\r\n"' || true)"
+      if [ "$compose_code" = "124" ]; then
+        identity_timed_out=true
+        identity_elapsed_seconds="$identity_timeout"
+        reason_code="managed_wsl2_runtime_identity_timeout"
+      elif [ "$docker_status" = "GO" ]; then
+        reason_code="managed_wsl2_compose_cli_not_go"
+      fi
+    fi
+  fi
+fi
+
+if [ "$identity_timed_out" = "false" ] && [ "$docker_status" = "GO" ] && [ "$compose_cli_status" = "GO" ]; then
+  reason_code="managed_wsl2_runtime_identity_cli_go"
+fi
+
+printf '{"kind":"immoapp_managed_wsl2_runtime_identity","schema_version":1,"distro_name":"%s","runtime_identity":"ImmoAppRuntime","runtime_version":"__IMMOAPP_RUNTIME_VERSION__","runtime_root":"%s","container_engine_kind":"%s","container_engine_version":"%s","container_engine_status":"%s","docker_info_status":"%s","compose_cli_status":"%s","compose_status":"%s","compose_version":"%s","identity_timeout_seconds":%s,"identity_elapsed_seconds":%s,"identity_timed_out":%s,"service_status":"NO-GO","reason_code":"%s","agency_install_status":"NO_GO"}\n' "$distro_name" "$runtime_root" "$engine_kind" "$docker_version" "$docker_status" "$docker_info_status" "$compose_cli_status" "$compose_cli_status" "$compose_version" "$identity_timeout" "$identity_elapsed_seconds" "$identity_timed_out" "$reason_code"
+
+if [ "$identity_timed_out" = "false" ] && [ "$docker_status" = "GO" ] && [ "$compose_cli_status" = "GO" ]; then
+  exit 0
+fi
+exit 31

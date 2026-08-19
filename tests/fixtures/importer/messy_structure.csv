@@ -1,0 +1,11 @@
+"Family Name";"Phone";"Type";"Budget";"Notes"
+"Dupont";"0600000001";"Apartment";"100000";"Simple case"
+"Martin";"0600000002";"House";"200,000";"Comma in number"
+"L'affaire";"0600000003";"Studio";"150 000";"Space in number"
+"Broken \"Quote";"0600000004";"Loft";"300000";"Escaped quote test"
+"Multi
+Line
+Field";"0600000005";"Villa";"1.000.000";"Newlines in field"
+"Semi;Colon;Lover";"0600000006";"Castle";"5000000";"Semicolons; inside; field"
+;;;;
+"Empty Row Above";"0600000007";"Garage";"10000";

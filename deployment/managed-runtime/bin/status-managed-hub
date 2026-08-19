@@ -1,0 +1,28 @@
+#!/bin/sh
+set -eu
+. /opt/immoapp/runtime/bin/managed-hub-common
+
+init_statuses
+verify_identity || true
+ensure_docker_daemon status || true
+verify_image_bundle || true
+ensure_images_present status || true
+verify_compose_payload || true
+services_json="[]"
+failures_json="[]"
+if [ "$docker_info_status" = "GO" ] && [ "$compose_payload_status" = "GO" ]; then
+  check_compose_project_present || true
+  services_json="$(json_services_fast)"
+  failures_json="$(json_failures_fast)"
+  check_compose_services_fast || true
+fi
+front_partial="NO-GO"
+if probe_front_door; then
+  front_partial="GO"
+fi
+if [ "$distro_identity_status" = "GO" ] && [ "$docker_info_status" = "GO" ] && [ "$image_archive_status" = "GO" ] && [ "$image_presence_status" = "GO" ] && [ "$compose_service_status" = "GO" ] && [ "$front_door_health_status" = "GO" ]; then
+  emit_payload "GO" "managed_wsl2_runtime_status_go" "GO" "$front_partial" "$services_json" "$failures_json"
+  exit 0
+fi
+emit_payload "NO-GO" "managed_wsl2_runtime_status_not_go" "NO-GO" "$front_partial" "$services_json" "$failures_json"
+exit 1

@@ -1,0 +1,374 @@
+[
+  {
+    "name": "clean_client_demande_same_row",
+    "row": {"family_name": "Yacine", "phone": "0555001001", "locations": "Hydra", "budget_min": "1200000"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "demande", "topology_side": "client_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_buy_locations_budget_band",
+    "row": {"phone": "0555001002", "action": "buy", "type": "apartment", "locations": "Hydra", "budget_min": "1000000", "budget_max": "3000000"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "demande", "topology_side": "client_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_surface_beds_band",
+    "row": {"phone": "0555001003", "surface_min": "70", "surface_max": "140", "beds_min": "3"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "demande", "topology_side": "client_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_floor_band",
+    "row": {"phone": "0555001004", "floor_min": "1", "floor_max": "4"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "demande", "topology_side": "client_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_client_id",
+    "row": {"phone": "0555001005", "client_id": "42"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "demande", "topology_side": "client_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_accessibility",
+    "row": {"phone": "0555001006", "accessibility_required": "yes"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "demande", "topology_side": "client_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_root_family_phone",
+    "row": {"family_name": "Nadia", "phone": "0555001007", "status": "active"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_root_email_only",
+    "row": {"email": "n@example.test", "status": "active"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_root_phone_rent",
+    "row": {"family_name": "Rania", "phone": "0555001008", "action": "rent"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "reason_code": "weak_child_evidence", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_root_phone_wilaya",
+    "row": {"family_name": "Sonia", "phone": "0555001009", "wilaya": "16"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "reason_code": "weak_child_evidence", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_root_phone_type_only",
+    "row": {"family_name": "Riad", "phone": "0555001010", "type": "apartment"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "reason_code": "weak_child_evidence", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_root_phone_remarks",
+    "row": {"family_name": "Imen", "phone": "0555001011", "remarks": "follow up"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "client_bundle_weak_root_status_only",
+    "row": {"status": "active", "remarks": "call back"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "weak_root_evidence", "mapping_palette_mode": "same_side_union", "disposition": "review"}
+  },
+  {
+    "name": "client_bundle_weak_root_status_locations",
+    "row": {"status": "active", "locations": "Hydra"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "weak_root_evidence", "mapping_palette_mode": "same_side_union", "disposition": "review"}
+  },
+  {
+    "name": "client_bundle_ambiguous_locations_only",
+    "row": {"locations": "Hydra"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "ambiguous_same_side_shape", "mapping_palette_mode": "same_side_union", "disposition": "review"}
+  },
+  {
+    "name": "client_bundle_ambiguous_surface_only",
+    "row": {"surface_min": "75"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "ambiguous_same_side_shape", "mapping_palette_mode": "same_side_union", "disposition": "review"}
+  },
+  {
+    "name": "client_bundle_ambiguous_wilaya_only",
+    "row": {"wilaya": "16"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "ambiguous_same_side_shape", "mapping_palette_mode": "same_side_union", "disposition": "review"}
+  },
+  {
+    "name": "client_bundle_cross_side_link_budget_location",
+    "row": {"family_name": "Bad", "phone": "0555001012", "location": "Hydra", "budget": "9000000", "link": "https://example.test/listing/1"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "cross_side_contamination", "mapping_palette_mode": "same_side_union", "disposition": "block"}
+  },
+  {
+    "name": "client_bundle_cross_side_sell_listing",
+    "row": {"family_name": "Bad2", "phone": "0555001013", "action": "sell", "location": "Hydra", "budget": "8800000"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "cross_side_contamination", "mapping_palette_mode": "same_side_union", "disposition": "block"}
+  },
+  {
+    "name": "client_bundle_cross_side_budget_link_latitude",
+    "row": {"family_name": "Bad3", "phone": "0555001014", "budget": "7600000", "link": "https://example.test/x", "latitude": "36.7"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "cross_side_contamination", "mapping_palette_mode": "same_side_union", "disposition": "block"}
+  },
+  {
+    "name": "clean_listing_offer_same_row",
+    "row": {"family_name": "Owner", "phone": "0555002001", "location": "Hydra", "budget": "23000000"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "offer", "topology_side": "listing_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_sell_location_budget",
+    "row": {"phone": "0555002002", "action": "sell", "type": "apartment", "location": "Hydra", "budget": "9000000"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "offer", "topology_side": "listing_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_surface_beds_floor",
+    "row": {"phone": "0555002003", "surface": "120", "beds": "3", "floor": "4"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "offer", "topology_side": "listing_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_link_latitude_longitude",
+    "row": {"phone": "0555002004", "link": "https://example.test/property/1", "latitude": "36.7", "longitude": "3.0"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "offer", "topology_side": "listing_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_listing_id",
+    "row": {"phone": "0555002005", "listing_id": "99"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "offer", "topology_side": "listing_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_price_negotiable",
+    "row": {"phone": "0555002006", "price_negotiable": "yes"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "offer", "topology_side": "listing_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_root_family_phone",
+    "row": {"family_name": "Amina", "phone": "0555002007", "status": "active"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_root_email_only",
+    "row": {"email": "owner@example.test", "remarks": "good lead"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_root_phone_rent",
+    "row": {"family_name": "Owner2", "phone": "0555002008", "action": "rent"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "reason_code": "weak_child_evidence", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_root_phone_wilaya",
+    "row": {"family_name": "Owner3", "phone": "0555002009", "wilaya": "16"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "reason_code": "weak_child_evidence", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_root_phone_type_only",
+    "row": {"family_name": "Owner4", "phone": "0555002010", "type": "apartment"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "reason_code": "weak_child_evidence", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_root_phone_remarks",
+    "row": {"family_name": "Owner5", "phone": "0555002011", "remarks": "owner note"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "mapping_palette_mode": "same_side_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "listing_bundle_weak_root_status_only",
+    "row": {"status": "active", "remarks": "check later"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "weak_root_evidence", "mapping_palette_mode": "same_side_union", "disposition": "review"}
+  },
+  {
+    "name": "listing_bundle_weak_root_status_location",
+    "row": {"status": "active", "location": "Hydra"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "weak_root_evidence", "mapping_palette_mode": "same_side_union", "disposition": "review"}
+  },
+  {
+    "name": "listing_bundle_ambiguous_location_only",
+    "row": {"location": "Hydra"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "ambiguous_same_side_shape", "mapping_palette_mode": "same_side_union", "disposition": "review"}
+  },
+  {
+    "name": "listing_bundle_ambiguous_surface_only",
+    "row": {"surface": "95"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "ambiguous_same_side_shape", "mapping_palette_mode": "same_side_union", "disposition": "review"}
+  },
+  {
+    "name": "listing_bundle_ambiguous_floor_only",
+    "row": {"floor": "2"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "ambiguous_same_side_shape", "mapping_palette_mode": "same_side_union", "disposition": "review"}
+  },
+  {
+    "name": "listing_bundle_cross_side_locations_budget_band",
+    "row": {"family_name": "Contam1", "phone": "0555002012", "locations": "Hydra", "budget_min": "1000000", "budget_max": "2000000"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "cross_side_contamination", "mapping_palette_mode": "same_side_union", "disposition": "block"}
+  },
+  {
+    "name": "listing_bundle_cross_side_buy_locations",
+    "row": {"family_name": "Contam2", "phone": "0555002013", "action": "buy", "locations": "Hydra"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "cross_side_contamination", "mapping_palette_mode": "same_side_union", "disposition": "block"}
+  },
+  {
+    "name": "listing_bundle_cross_side_surface_band",
+    "row": {"family_name": "Contam3", "phone": "0555002014", "surface_min": "60", "surface_max": "120"},
+    "kwargs": {"bundle_mode": "same_side_bundle", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "reason_code": "cross_side_contamination", "mapping_palette_mode": "same_side_union", "disposition": "block"}
+  },
+  {
+    "name": "single_entity_client_root_name_phone",
+    "row": {"family_name": "FlatClient", "phone": "0555003001"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "entity_only", "disposition": "auto_execute"}
+  },
+  {
+    "name": "single_entity_client_email_status",
+    "row": {"email": "flat@example.test", "status": "active"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "entity_only", "disposition": "auto_execute"}
+  },
+  {
+    "name": "single_entity_listing_root_name_phone",
+    "row": {"family_name": "FlatListing", "phone": "0555003002"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "mapping_palette_mode": "entity_only", "disposition": "auto_execute"}
+  },
+  {
+    "name": "single_entity_listing_phone_notes",
+    "row": {"phone": "0555003003", "remarks": "owner note"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "mapping_palette_mode": "entity_only", "disposition": "auto_execute"}
+  },
+  {
+    "name": "single_entity_demande_child_only",
+    "row": {"action": "buy", "locations": "Hydra", "budget_min": "1200000"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "demande", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "demande", "topology_side": "client_side", "mapping_palette_mode": "entity_only", "disposition": "auto_execute"}
+  },
+  {
+    "name": "single_entity_offer_child_only",
+    "row": {"action": "sell", "location": "Hydra", "budget": "9000000"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "offer", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "offer", "topology_side": "listing_side", "mapping_palette_mode": "entity_only", "disposition": "auto_execute"}
+  },
+  {
+    "name": "single_entity_unknown_empty",
+    "row": {},
+    "kwargs": {"bundle_mode": "single_entity"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "mapping_palette_mode": "entity_only", "disposition": "review"}
+  },
+  {
+    "name": "single_entity_unknown_link_only",
+    "row": {"link": "https://example.test/property/9"},
+    "kwargs": {"bundle_mode": "single_entity"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "mapping_palette_mode": "entity_only", "disposition": "review"}
+  },
+  {
+    "name": "single_entity_unknown_floor_min_only",
+    "row": {"floor_min": "1"},
+    "kwargs": {"bundle_mode": "single_entity"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "mapping_palette_mode": "entity_only", "disposition": "review"}
+  },
+  {
+    "name": "single_entity_unknown_wilaya_only",
+    "row": {"wilaya": "16"},
+    "kwargs": {"bundle_mode": "single_entity"},
+    "expected": {"entity_type": null, "topology_side": "unknown", "mapping_palette_mode": "entity_only", "disposition": "review"}
+  },
+  {
+    "name": "single_entity_unknown_root_metadata_only",
+    "row": {"status": "active", "remarks": "note"},
+    "kwargs": {"bundle_mode": "single_entity"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "entity_only", "disposition": "auto_execute"}
+  },
+  {
+    "name": "single_entity_unknown_root_identity_only_phone",
+    "row": {"phone": "0555003004"},
+    "kwargs": {"bundle_mode": "single_entity"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "entity_only", "disposition": "auto_execute"}
+  },
+  {
+    "name": "recovery_union_listing_offer_action_type_location_budget",
+    "row": {"action": "sell", "type": "apartment", "location": "Hydra", "budget": "9000000"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "mapping_palette_mode": "recovery_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "recovery_union_listing_offer_surface_beds_floor",
+    "row": {"surface": "120", "beds": "3", "floor": "4"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "mapping_palette_mode": "recovery_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "recovery_union_listing_offer_link_latitude_budget",
+    "row": {"link": "https://example.test/property/7", "latitude": "36.7", "budget": "8100000"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "mapping_palette_mode": "recovery_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "recovery_union_listing_offer_action_budget_only",
+    "row": {"action": "sell", "budget": "7600000"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "mapping_palette_mode": "recovery_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "recovery_union_listing_offer_location_price_only",
+    "row": {"location": "Hydra", "price": "7200000"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "listing", "topology_side_hint": "listing_side"},
+    "expected": {"entity_type": "listing", "topology_side": "listing_side", "mapping_palette_mode": "recovery_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "recovery_union_client_demande_action_type_locations_budget_band",
+    "row": {"action": "buy", "type": "apartment", "locations": "Hydra", "budget_min": "1000000", "budget_max": "2500000"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "recovery_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "recovery_union_client_demande_surface_beds_band",
+    "row": {"surface_min": "70", "surface_max": "130", "beds_min": "3"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "recovery_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "recovery_union_client_demande_accessibility_floor_band",
+    "row": {"accessibility_required": "yes", "floor_min": "1", "floor_max": "3"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "recovery_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "recovery_union_client_demande_locations_budget_max",
+    "row": {"locations": "Hydra", "budget_max": "3000000"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "recovery_union", "disposition": "auto_execute"}
+  },
+  {
+    "name": "recovery_union_client_demande_action_locations_only",
+    "row": {"action": "buy", "locations": "Hydra"},
+    "kwargs": {"bundle_mode": "single_entity", "default_entity_type": "client", "topology_side_hint": "client_side"},
+    "expected": {"entity_type": "client", "topology_side": "client_side", "mapping_palette_mode": "recovery_union", "disposition": "auto_execute"}
+  }
+]

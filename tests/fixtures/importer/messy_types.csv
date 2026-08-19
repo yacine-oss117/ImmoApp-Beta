@@ -1,0 +1,8 @@
+Reference,Date_Added,Is_VIP,Surface,Price_Est,Furnished
+REF001,2023-01-01,True,100.5,50000,Yes
+REF002,01/02/2023,false,200,45k,No
+REF003,15-Mar-2023,1,300m2,"120,000.00",Partially
+REF004,2023/04/10,yes,400.00,1M,TRUE
+REF005,Unknown,0,Not specified,TBD,N/A
+REF006,2023-12-31,Y,500,10000,y
+REF007,Today,NO,600,Free,n

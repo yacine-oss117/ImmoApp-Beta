@@ -1,0 +1,13 @@
+{
+    admin off
+}
+
+:8000 {
+    encode zstd gzip
+    header {
+        X-ImmoApp-Front-Door "caddy"
+        X-Content-Type-Options "nosniff"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+    reverse_proxy {$IMMOAPP_UPSTREAM:web:8000}
+}

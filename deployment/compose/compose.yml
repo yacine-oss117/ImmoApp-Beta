@@ -1,0 +1,842 @@
+﻿x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  rabbitmq-init:
+    image: busybox:1.36
+    command: sh -ec "mkdir -p /var/lib/rabbitmq && chown -R 999:999 /var/lib/rabbitmq"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: "no"
+    logging: *default-logging
+
+  db:
+    image: postgis/postgis:18-3.6
+    command:
+      [
+        "postgres",
+        "-c",
+        "max_connections=${POSTGRES_MAX_CONNECTIONS_DOCKER:-300}",
+        "-c",
+        "superuser_reserved_connections=${POSTGRES_SUPERUSER_RESERVED_CONNECTIONS_DOCKER:-10}",
+      ]
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-immoapp}
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:-immoapp}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?required}
+      IMMOAPP_APP_DB_USER: ${POSTGRES_USER:-immoapp_app}
+      IMMOAPP_APP_DB_PASSWORD: ${POSTGRES_PASSWORD:?required}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql
+      - ./deployment/docker/init:/docker-entrypoint-initdb.d:ro
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_ADMIN_USER:-immoapp} -d ${POSTGRES_DB:-immoapp}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    depends_on:
+      rabbitmq-init:
+        condition: service_completed_successfully
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-immoapp}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:?required}
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 15s
+      retries: 20
+      start_period: 120s
+
+  valkey:
+    image: valkey/valkey:9.0.1
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - valkey_data:/data
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  openbao:
+    image: openbao/openbao:latest
+    ports:
+      - "127.0.0.1:8200:8200"
+    command: server -config=/openbao/config/openbao.hcl
+    volumes:
+      - ./deployment/docker/openbao/openbao.hcl:/openbao/config/openbao.hcl:ro
+      - openbao_data:/openbao/file
+      - openbao_logs:/openbao/logs
+    logging: *default-logging
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "bao status -address=http://127.0.0.1:8200 | grep -q 'Initialized[[:space:]]*true' && bao status -address=http://127.0.0.1:8200 | grep -q 'Sealed[[:space:]]*false'",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  openbao-init:
+    image: ${IMMOAPP_APP_IMAGE:-immoapp-server:local}
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile
+    user: "0:0"
+    env_file:
+      - ${IMMOAPP_RUNTIME_ENV_FILE:-C:/ProgramData/ImmoApp/config/.env.local}
+    environment:
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-1}
+      BAO_TIMEOUT: ${BAO_TIMEOUT_DOCKER:-8}
+      BAO_BOOTSTRAP_ADMIN_TOKEN: ${BAO_BOOTSTRAP_ADMIN_TOKEN_DOCKER:-}
+      BAO_BOOTSTRAP_TOKEN_FILE: ${BAO_BOOTSTRAP_TOKEN_FILE_DOCKER:-/run/immoapp-secrets/openbao.token}
+      BAO_UNSEAL_KEY_FILE: ${BAO_UNSEAL_KEY_FILE_DOCKER:-/run/immoapp-secrets/openbao.unseal}
+    command: ["python", "-m", "server.secret_store.openbao_runtime_init"]
+    depends_on:
+      openbao:
+        condition: service_started
+    restart: "no"
+    volumes:
+      - ${IMMOAPP_SECRETS_HOST_DIR:-C:/ProgramData/ImmoApp/secrets}:/run/immoapp-secrets
+    logging: *default-logging
+
+  openbao-seed:
+    image: ${IMMOAPP_APP_IMAGE:-immoapp-server:local}
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile
+    user: "0:0"
+    env_file:
+      - ${IMMOAPP_RUNTIME_ENV_FILE:-C:/ProgramData/ImmoApp/config/.env.local}
+    environment:
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-1}
+      BAO_TIMEOUT: ${BAO_TIMEOUT_DOCKER:-8}
+      BAO_TOKEN: ""
+      BAO_TOKEN_FILE: ${BAO_BOOTSTRAP_TOKEN_FILE_DOCKER:-/run/immoapp-secrets/openbao.token}
+      BAO_APPROLE_FILE: ${BAO_APPROLE_FILE_DOCKER:-/run/immoapp-secrets/openbao-approle.json}
+      BAO_BOOTSTRAP_ADMIN_TOKEN: ${BAO_BOOTSTRAP_ADMIN_TOKEN_DOCKER:-}
+      IMMOAPP_BOOTSTRAP_SECRETS_FILE: ${IMMOAPP_BOOTSTRAP_SECRETS_FILE_DOCKER:-/run/immoapp-secrets/immoapp-dev-secrets.json}
+      OPENBAO_APP_ROLE_NAME: ${OPENBAO_APP_ROLE_NAME_DOCKER:-immoapp-server-dev}
+      OPENBAO_APP_POLICY_NAME: ${OPENBAO_APP_POLICY_NAME_DOCKER:-immoapp-app-secrets-read}
+      OPENBAO_APPROLE_SECRET_ID_TTL: ${OPENBAO_APPROLE_SECRET_ID_TTL_DOCKER:-168h}
+      POSTGRES_DB: ${POSTGRES_DB:-immoapp}
+      POSTGRES_USER: ${POSTGRES_USER:-immoapp_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      POSTGRES_ADMIN_USER: ${POSTGRES_ADMIN_USER:-immoapp}
+      POSTGRES_ADMIN_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:?required}
+      RABBITMQ_USER: ${RABBITMQ_USER:-immoapp}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:?required}
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:?required}@rabbitmq:5672//
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-immoapp}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-immoapp123}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-immoapp}
+    command: ["python", "-m", "server.secret_store.openbao_runtime_seed"]
+    depends_on:
+      openbao-init:
+        condition: service_completed_successfully
+    restart: "no"
+    volumes:
+      - ${IMMOAPP_SECRETS_HOST_DIR:-C:/ProgramData/ImmoApp/secrets}:/run/immoapp-secrets
+    logging: *default-logging
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-immoapp}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-immoapp123}
+      MINIO_KMS_SECRET_KEY: ${MINIO_KMS_SECRET_KEY:-immoapp-kms-key:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio_data:/data
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: minio/mc:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: /bin/sh
+    command: -c "mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-immoapp} ${MINIO_ROOT_PASSWORD:-immoapp123} && mc mb --ignore-existing local/${STORAGE_BUCKET:-immoapp} && mc anonymous set none local/${STORAGE_BUCKET:-immoapp} || true"
+    restart: "no"
+    logging: *default-logging
+
+  clamav:
+    image: clamav/clamav:latest
+    ports:
+      - "127.0.0.1:3310:3310"
+    volumes:
+      - clamav_data:/var/lib/clamav
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping=1 >/dev/null 2>&1"]
+      interval: 20s
+      timeout: 10s
+      retries: 30
+      start_period: 90s
+
+  app-data-init:
+    image: busybox:1.36
+    user: "0:0"
+    command:
+      [
+        "sh",
+        "-c",
+        "mkdir -p /var/lib/immoapp/cache /var/lib/immoapp/media /var/lib/immoapp/static && chown -R 10001:10001 /var/lib/immoapp",
+      ]
+    restart: "no"
+    volumes:
+      - type: volume
+        source: app_data
+        target: /var/lib/immoapp
+        volume:
+          nocopy: true
+    logging: *default-logging
+
+  web:
+    image: ${IMMOAPP_APP_IMAGE:-immoapp-server:local}
+    build:
+      context: .
+      dockerfile: deployment/docker/Dockerfile
+    env_file:
+      - ${IMMOAPP_RUNTIME_ENV_FILE:-C:/ProgramData/ImmoApp/config/.env.local}
+    environment:
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      DJANGO_DEBUG: "0"
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT_DOCKER:-0}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE_DOCKER:-0}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE_DOCKER:-0}
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-1}
+      BAO_TOKEN: ${BAO_TOKEN_DOCKER:-}
+      BAO_TOKEN_FILE: ${BAO_TOKEN_FILE_DOCKER:-}
+      BAO_APPROLE_FILE: ${BAO_APPROLE_FILE_DOCKER:-/run/immoapp-secrets/openbao-approle.json}
+      BAO_ROLE_ID: ${BAO_ROLE_ID_DOCKER:-}
+      BAO_SECRET_ID: ${BAO_SECRET_ID_DOCKER:-}
+      ASGI_THREADS: ${ASGI_THREADS_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_WEB_RUNTIME: ${IMMOAPP_WEB_RUNTIME_DOCKER:-gunicorn_uvicorn}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS_DOCKER:?hub_runtime_profile_required}
+      GUNICORN_TIMEOUT: ${GUNICORN_TIMEOUT_DOCKER:-120}
+      GUNICORN_GRACEFUL_TIMEOUT: ${GUNICORN_GRACEFUL_TIMEOUT_DOCKER:-30}
+      GUNICORN_KEEPALIVE: ${GUNICORN_KEEPALIVE_DOCKER:-5}
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      IMMOAPP_SKIP_SCHEMA_INIT: "1"
+      IMMOAPP_E2E_TEST_MODE: ${IMMOAPP_E2E_TEST_MODE_DOCKER:-0}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT_DOCKER:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL_DOCKER:-http/protobuf}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME_DOCKER:-immoapp-server}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_CONN_MAX_AGE: ${POSTGRES_CONN_MAX_AGE_DOCKER:-0}
+      PG_POOL_MIN: ${PG_POOL_MIN_WEB_DOCKER:-1}
+      PG_POOL_MAX: ${PG_POOL_MAX_WEB_DOCKER:?hub_runtime_profile_required}
+      PG_POOL_TIMEOUT: ${PG_POOL_TIMEOUT_WEB_DOCKER:-30}
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:?required}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      IMMOAPP_MATCH_BUILD_PIPELINE: ${IMMOAPP_MATCH_BUILD_PIPELINE_DOCKER:-direct}
+      IMMOAPP_MATCH_RUNTIME_PROFILE: ${IMMOAPP_MATCH_RUNTIME_PROFILE_DOCKER:-auto}
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS_DOCKER:-120000}
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS_DOCKER:-5000}
+      IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE: ${IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      MATCH_CACHE_DB_BATCH_SIZE: ${MATCH_CACHE_DB_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE: ${IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE_DOCKER:-1000}
+      IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD: ${IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD_DOCKER:-250}
+    command:
+      [
+        "sh",
+        "-ec",
+        "exec /app/deployment/docker/run_web.sh",
+      ]
+    ports:
+      - "${IMMOAPP_WEB_BIND_HOST:-127.0.0.1}:${IMMOAPP_BACKEND_HOST_PORT:-8000}:8000"
+    depends_on:
+      app-data-init:
+        condition: service_completed_successfully
+      openbao:
+        condition: service_healthy
+      openbao-init:
+        condition: service_completed_successfully
+      openbao-seed:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: app_data
+        target: /var/lib/immoapp
+        volume:
+          nocopy: true
+      - ${IMMOAPP_SECRETS_HOST_DIR:-C:/ProgramData/ImmoApp/secrets}:/run/immoapp-secrets:ro
+    logging: *default-logging
+
+  worker:
+    image: ${IMMOAPP_APP_IMAGE:-immoapp-server:local}
+    env_file:
+      - ${IMMOAPP_RUNTIME_ENV_FILE:-C:/ProgramData/ImmoApp/config/.env.local}
+    environment:
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      DJANGO_DEBUG: "0"
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-1}
+      BAO_TOKEN: ${BAO_TOKEN_DOCKER:-}
+      BAO_TOKEN_FILE: ${BAO_TOKEN_FILE_DOCKER:-}
+      BAO_APPROLE_FILE: ${BAO_APPROLE_FILE_DOCKER:-/run/immoapp-secrets/openbao-approle.json}
+      BAO_ROLE_ID: ${BAO_ROLE_ID_DOCKER:-}
+      BAO_SECRET_ID: ${BAO_SECRET_ID_DOCKER:-}
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      IMMOAPP_SKIP_SCHEMA_INIT: "1"
+      IMMOAPP_E2E_TEST_MODE: ${IMMOAPP_E2E_TEST_MODE_DOCKER:-0}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT_DOCKER:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL_DOCKER:-http/protobuf}
+      OTEL_WORKER_SERVICE_NAME: ${OTEL_WORKER_SERVICE_NAME_DOCKER:-immoapp-worker}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_CONN_MAX_AGE: ${POSTGRES_CONN_MAX_AGE_DOCKER:-0}
+      PG_POOL_MIN: ${PG_POOL_MIN_WORKER_DOCKER:-1}
+      PG_POOL_MAX: ${PG_POOL_MAX_WORKER_DOCKER:?hub_runtime_profile_required}
+      PG_POOL_TIMEOUT: ${PG_POOL_TIMEOUT_WORKER_DOCKER:-30}
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:?required}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      IMMOAPP_MATCH_BUILD_PIPELINE: ${IMMOAPP_MATCH_BUILD_PIPELINE_DOCKER:-direct}
+      IMMOAPP_MATCH_RUNTIME_PROFILE: ${IMMOAPP_MATCH_RUNTIME_PROFILE_DOCKER:-auto}
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS_DOCKER:-120000}
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS_DOCKER:-5000}
+      IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE: ${IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      MATCH_CACHE_DB_BATCH_SIZE: ${MATCH_CACHE_DB_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE: ${IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE_DOCKER:-1000}
+      IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD: ${IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD_DOCKER:-250}
+    command:
+      [
+        "sh",
+        "-ec",
+        "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app worker -l info -Q celery,default,maintenance -c ${CELERY_WORKER_CONCURRENCY_DOCKER:?hub_runtime_profile_required}",
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -m celery -A server.immoapp_server.celery:celery_app inspect ping -d \"celery@$$HOSTNAME\" -t 5 >/dev/null 2>&1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      app-data-init:
+        condition: service_completed_successfully
+      openbao:
+        condition: service_healthy
+      openbao-init:
+        condition: service_completed_successfully
+      openbao-seed:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: app_data
+        target: /var/lib/immoapp
+        volume:
+          nocopy: true
+      - ${IMMOAPP_SECRETS_HOST_DIR:-C:/ProgramData/ImmoApp/secrets}:/run/immoapp-secrets:ro
+    logging: *default-logging
+
+  worker-rebuild:
+    image: ${IMMOAPP_APP_IMAGE:-immoapp-server:local}
+    env_file:
+      - ${IMMOAPP_RUNTIME_ENV_FILE:-C:/ProgramData/ImmoApp/config/.env.local}
+    environment:
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      DJANGO_DEBUG: "0"
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-1}
+      BAO_TOKEN: ${BAO_TOKEN_DOCKER:-}
+      BAO_TOKEN_FILE: ${BAO_TOKEN_FILE_DOCKER:-}
+      BAO_APPROLE_FILE: ${BAO_APPROLE_FILE_DOCKER:-/run/immoapp-secrets/openbao-approle.json}
+      BAO_ROLE_ID: ${BAO_ROLE_ID_DOCKER:-}
+      BAO_SECRET_ID: ${BAO_SECRET_ID_DOCKER:-}
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      IMMOAPP_SKIP_SCHEMA_INIT: "1"
+      IMMOAPP_E2E_TEST_MODE: ${IMMOAPP_E2E_TEST_MODE_DOCKER:-0}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT_DOCKER:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL_DOCKER:-http/protobuf}
+      OTEL_WORKER_SERVICE_NAME: ${OTEL_REBUILD_WORKER_SERVICE_NAME_DOCKER:-immoapp-worker-rebuild}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_CONN_MAX_AGE: ${POSTGRES_CONN_MAX_AGE_DOCKER:-0}
+      PG_POOL_MIN: ${PG_POOL_MIN_REBUILD_DOCKER:-1}
+      PG_POOL_MAX: ${PG_POOL_MAX_REBUILD_DOCKER:?hub_runtime_profile_required}
+      PG_POOL_TIMEOUT: ${PG_POOL_TIMEOUT_REBUILD_DOCKER:-30}
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:?required}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      IMMOAPP_MATCH_BUILD_PIPELINE: ${IMMOAPP_MATCH_BUILD_PIPELINE_DOCKER:-direct}
+      IMMOAPP_MATCH_RUNTIME_PROFILE: ${IMMOAPP_MATCH_RUNTIME_PROFILE_DOCKER:-auto}
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS_DOCKER:-120000}
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS_DOCKER:-5000}
+      IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE: ${IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      MATCH_CACHE_DB_BATCH_SIZE: ${MATCH_CACHE_DB_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE: ${IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE_DOCKER:-1000}
+      IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD: ${IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD_DOCKER:-250}
+    command:
+      [
+        "sh",
+        "-ec",
+          "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app worker -l info -Q rebuild_batch -c ${CELERY_REBUILD_CONCURRENCY_DOCKER:?hub_runtime_profile_required}",
+        ]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -m celery -A server.immoapp_server.celery:celery_app inspect ping -d \"celery@$$HOSTNAME\" -t 5 >/dev/null 2>&1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      app-data-init:
+        condition: service_completed_successfully
+      openbao:
+        condition: service_healthy
+      openbao-init:
+        condition: service_completed_successfully
+      openbao-seed:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: app_data
+        target: /var/lib/immoapp
+        volume:
+          nocopy: true
+      - ${IMMOAPP_SECRETS_HOST_DIR:-C:/ProgramData/ImmoApp/secrets}:/run/immoapp-secrets:ro
+    logging: *default-logging
+
+  worker-import:
+    image: ${IMMOAPP_APP_IMAGE:-immoapp-server:local}
+    env_file:
+      - ${IMMOAPP_RUNTIME_ENV_FILE:-C:/ProgramData/ImmoApp/config/.env.local}
+    environment:
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      DJANGO_DEBUG: "0"
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-1}
+      BAO_TOKEN: ${BAO_TOKEN_DOCKER:-}
+      BAO_TOKEN_FILE: ${BAO_TOKEN_FILE_DOCKER:-}
+      BAO_APPROLE_FILE: ${BAO_APPROLE_FILE_DOCKER:-/run/immoapp-secrets/openbao-approle.json}
+      BAO_ROLE_ID: ${BAO_ROLE_ID_DOCKER:-}
+      BAO_SECRET_ID: ${BAO_SECRET_ID_DOCKER:-}
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      IMMOAPP_SKIP_SCHEMA_INIT: "1"
+      IMMOAPP_E2E_TEST_MODE: ${IMMOAPP_E2E_TEST_MODE_DOCKER:-0}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT_DOCKER:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL_DOCKER:-http/protobuf}
+      OTEL_WORKER_SERVICE_NAME: ${OTEL_IMPORT_WORKER_SERVICE_NAME_DOCKER:-immoapp-worker-import}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_CONN_MAX_AGE: ${POSTGRES_CONN_MAX_AGE_DOCKER:-0}
+      PG_POOL_MIN: ${PG_POOL_MIN_IMPORT_DOCKER:-2}
+      PG_POOL_MAX: ${PG_POOL_MAX_IMPORT_DOCKER:?hub_runtime_profile_required}
+      PG_POOL_TIMEOUT: ${PG_POOL_TIMEOUT_IMPORT_DOCKER:-30}
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:?required}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      IMMOAPP_MATCH_BUILD_PIPELINE: ${IMMOAPP_MATCH_BUILD_PIPELINE_DOCKER:-direct}
+      IMMOAPP_MATCH_RUNTIME_PROFILE: ${IMMOAPP_MATCH_RUNTIME_PROFILE_DOCKER:-auto}
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS_DOCKER:-120000}
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS_DOCKER:-5000}
+      IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE: ${IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      MATCH_CACHE_DB_BATCH_SIZE: ${MATCH_CACHE_DB_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE: ${IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE_DOCKER:-1000}
+      IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD: ${IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD_DOCKER:-250}
+    command:
+      [
+        "sh",
+        "-ec",
+        "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app worker -l info -Q imports -c ${CELERY_IMPORT_CONCURRENCY_DOCKER:?hub_runtime_profile_required}",
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -m celery -A server.immoapp_server.celery:celery_app inspect ping -d \"celery@$$HOSTNAME\" -t 5 >/dev/null 2>&1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      app-data-init:
+        condition: service_completed_successfully
+      openbao:
+        condition: service_healthy
+      openbao-init:
+        condition: service_completed_successfully
+      openbao-seed:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: app_data
+        target: /var/lib/immoapp
+        volume:
+          nocopy: true
+      - ${IMMOAPP_SECRETS_HOST_DIR:-C:/ProgramData/ImmoApp/secrets}:/run/immoapp-secrets:ro
+    logging: *default-logging
+
+  worker-match:
+    image: ${IMMOAPP_APP_IMAGE:-immoapp-server:local}
+    env_file:
+      - ${IMMOAPP_RUNTIME_ENV_FILE:-C:/ProgramData/ImmoApp/config/.env.local}
+    environment:
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      DJANGO_DEBUG: "0"
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-1}
+      BAO_TOKEN: ${BAO_TOKEN_DOCKER:-}
+      BAO_TOKEN_FILE: ${BAO_TOKEN_FILE_DOCKER:-}
+      BAO_APPROLE_FILE: ${BAO_APPROLE_FILE_DOCKER:-/run/immoapp-secrets/openbao-approle.json}
+      BAO_ROLE_ID: ${BAO_ROLE_ID_DOCKER:-}
+      BAO_SECRET_ID: ${BAO_SECRET_ID_DOCKER:-}
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      IMMOAPP_SKIP_SCHEMA_INIT: "1"
+      IMMOAPP_E2E_TEST_MODE: ${IMMOAPP_E2E_TEST_MODE_DOCKER:-0}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT_DOCKER:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL_DOCKER:-http/protobuf}
+      OTEL_WORKER_SERVICE_NAME: ${OTEL_MATCH_PAIRS_WORKER_SERVICE_NAME_DOCKER:-immoapp-worker-match}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_CONN_MAX_AGE: ${POSTGRES_CONN_MAX_AGE_DOCKER:-0}
+      PG_POOL_MIN: ${PG_POOL_MIN_MATCH_DOCKER:-1}
+      PG_POOL_MAX: ${PG_POOL_MAX_MATCH_DOCKER:?hub_runtime_profile_required}
+      PG_POOL_TIMEOUT: ${PG_POOL_TIMEOUT_MATCH_DOCKER:-30}
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:?required}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      IMMOAPP_MATCH_BUILD_PIPELINE: ${IMMOAPP_MATCH_BUILD_PIPELINE_DOCKER:-direct}
+      IMMOAPP_MATCH_RUNTIME_PROFILE: ${IMMOAPP_MATCH_RUNTIME_PROFILE_DOCKER:-auto}
+      IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_STATEMENT_TIMEOUT_MS_DOCKER:-120000}
+      IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS: ${IMMOAPP_MATCH_REBUILD_LOCK_TIMEOUT_MS_DOCKER:-5000}
+      IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE: ${IMMOAPP_MATCH_PAIRS_DEMANDE_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      MATCH_CACHE_DB_BATCH_SIZE: ${MATCH_CACHE_DB_BATCH_SIZE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE: ${IMMOAPP_MATCH_PAIRS_TASK_CHUNK_SIZE_DOCKER:-1000}
+      IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD: ${IMMOAPP_MATCH_PAIRS_FULL_SQL_THRESHOLD_DOCKER:-250}
+    command:
+      [
+        "sh",
+        "-ec",
+        "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app worker -l info -Q match_pairs -c ${CELERY_MATCH_PAIRS_CONCURRENCY_DOCKER:?hub_runtime_profile_required}",
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "python -m celery -A server.immoapp_server.celery:celery_app inspect ping -d \"celery@$$HOSTNAME\" -t 5 >/dev/null 2>&1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      app-data-init:
+        condition: service_completed_successfully
+      openbao:
+        condition: service_healthy
+      openbao-init:
+        condition: service_completed_successfully
+      openbao-seed:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: app_data
+        target: /var/lib/immoapp
+        volume:
+          nocopy: true
+      - ${IMMOAPP_SECRETS_HOST_DIR:-C:/ProgramData/ImmoApp/secrets}:/run/immoapp-secrets:ro
+    logging: *default-logging
+
+  beat:
+    image: ${IMMOAPP_APP_IMAGE:-immoapp-server:local}
+    env_file:
+      - ${IMMOAPP_RUNTIME_ENV_FILE:-C:/ProgramData/ImmoApp/config/.env.local}
+    environment:
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      DJANGO_DEBUG: "0"
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-1}
+      BAO_TOKEN: ${BAO_TOKEN_DOCKER:-}
+      BAO_TOKEN_FILE: ${BAO_TOKEN_FILE_DOCKER:-}
+      BAO_APPROLE_FILE: ${BAO_APPROLE_FILE_DOCKER:-/run/immoapp-secrets/openbao-approle.json}
+      BAO_ROLE_ID: ${BAO_ROLE_ID_DOCKER:-}
+      BAO_SECRET_ID: ${BAO_SECRET_ID_DOCKER:-}
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      IMMOAPP_HUB_RESOLVED_PROFILE: ${IMMOAPP_HUB_RESOLVED_PROFILE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_EXPORT_MODE: ${IMMOAPP_HUB_PROFILE_EXPORT_MODE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE: ${IMMOAPP_HUB_PROFILE_SOURCE_DOCKER:?hub_runtime_profile_required}
+      IMMOAPP_HUB_PROFILE_SOURCE_DETAIL: ${IMMOAPP_HUB_PROFILE_SOURCE_DETAIL:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DETECTION_SOURCE: ${IMMOAPP_HUB_DETECTION_SOURCE:?hub_runtime_profile_required}
+      IMMOAPP_HUB_CPU_BUDGET: ${IMMOAPP_HUB_CPU_BUDGET:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MEMORY_GB: ${IMMOAPP_HUB_MEMORY_GB:?hub_runtime_profile_required}
+      IMMOAPP_HUB_WORKER_CONCURRENCY: ${IMMOAPP_HUB_WORKER_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_IMPORT_CONCURRENCY: ${IMMOAPP_HUB_IMPORT_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_MATCH_CONCURRENCY: ${IMMOAPP_HUB_MATCH_CONCURRENCY:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DB_POOL_MAX: ${IMMOAPP_HUB_DB_POOL_MAX:?hub_runtime_profile_required}
+      IMMOAPP_HUB_DEFAULT_BATCH_SIZE: ${IMMOAPP_HUB_DEFAULT_BATCH_SIZE:?hub_runtime_profile_required}
+      IMMOAPP_SKIP_SCHEMA_INIT: "1"
+      IMMOAPP_E2E_TEST_MODE: ${IMMOAPP_E2E_TEST_MODE_DOCKER:-0}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT_DOCKER:-}
+      OTEL_EXPORTER_OTLP_PROTOCOL: ${OTEL_EXPORTER_OTLP_PROTOCOL_DOCKER:-http/protobuf}
+      OTEL_WORKER_SERVICE_NAME: ${OTEL_WORKER_SERVICE_NAME_DOCKER:-immoapp-beat}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_CONN_MAX_AGE: ${POSTGRES_CONN_MAX_AGE_DOCKER:-0}
+      PG_POOL_MIN: ${PG_POOL_MIN_BEAT_DOCKER:-1}
+      PG_POOL_MAX: ${PG_POOL_MAX_BEAT_DOCKER:?hub_runtime_profile_required}
+      PG_POOL_TIMEOUT: ${PG_POOL_TIMEOUT_BEAT_DOCKER:-30}
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:?required}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      IMMOAPP_MATCH_RUNTIME_PROFILE: ${IMMOAPP_MATCH_RUNTIME_PROFILE_DOCKER:-auto}
+    command:
+      [
+        "sh",
+        "-ec",
+        "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app beat -l info --pidfile=/tmp/celerybeat.pid",
+      ]
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "test -f /tmp/celerybeat.pid && kill -0 $(cat /tmp/celerybeat.pid)",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    depends_on:
+      app-data-init:
+        condition: service_completed_successfully
+      openbao:
+        condition: service_healthy
+      openbao-init:
+        condition: service_completed_successfully
+      openbao-seed:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - type: volume
+        source: app_data
+        target: /var/lib/immoapp
+        volume:
+          nocopy: true
+      - ${IMMOAPP_SECRETS_HOST_DIR:-C:/ProgramData/ImmoApp/secrets}:/run/immoapp-secrets:ro
+    logging: *default-logging
+
+  caddy:
+    image: caddy:2.9.1
+    profiles: ["hub-front-door"]
+    environment:
+      IMMOAPP_UPSTREAM: web:8000
+      IMMOAPP_HUB_FRONT_DOOR_PORT: ${IMMOAPP_HUB_FRONT_DOOR_PORT:-8000}
+    ports:
+      - "${IMMOAPP_CADDY_BIND_HOST:-127.0.0.1}:${IMMOAPP_HUB_FRONT_DOOR_PORT:-8000}:8000"
+    depends_on:
+      web:
+        condition: service_started
+    volumes:
+      - ./deployment/proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging: *default-logging
+
+volumes:
+  pgdata:
+  openbao_data:
+  openbao_logs:
+  rabbitmq_data:
+  valkey_data:
+  caddy_data:
+  caddy_config:
+  minio_data:
+  clamav_data:
+  app_data:
+

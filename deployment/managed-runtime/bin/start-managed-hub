@@ -1,0 +1,85 @@
+#!/bin/sh
+set -eu
+. /opt/immoapp/runtime/bin/managed-hub-common
+
+init_statuses
+if ! verify_identity; then
+  emit_payload "NO-GO" "managed_wsl2_runtime_identity_mismatch" "NO-GO"
+  exit 31
+fi
+
+daemon_result=0
+ensure_docker_daemon start || daemon_result=$?
+if [ "$daemon_result" -eq 2 ]; then
+  emit_payload "NO-GO" "managed_wsl2_docker_daemon_start_timeout" "NO-GO"
+  exit 32
+fi
+if [ "$daemon_result" -ne 0 ]; then
+  emit_payload "NO-GO" "managed_wsl2_docker_info_not_go" "NO-GO"
+  exit 33
+fi
+if [ "$compose_cli_status" != "GO" ]; then
+  emit_payload "NO-GO" "managed_wsl2_compose_not_go" "NO-GO"
+  exit 34
+fi
+
+bundle_result=0
+verify_image_bundle || bundle_result=$?
+case "$bundle_result" in
+  0) ;;
+  1) emit_payload "NO-GO" "managed_runtime_image_bundle_inventory_missing" "NO-GO"; exit 35 ;;
+  2) emit_payload "NO-GO" "managed_runtime_image_archive_missing" "NO-GO"; exit 36 ;;
+  4) emit_payload "NO-GO" "managed_runtime_image_archive_hash_mismatch" "NO-GO"; exit 37 ;;
+  6) emit_payload "NO-GO" "managed_runtime_image_archive_wsl_path_missing" "NO-GO"; exit 38 ;;
+  *) emit_payload "NO-GO" "managed_runtime_image_bundle_inventory_invalid" "NO-GO"; exit 38 ;;
+esac
+
+if ! ensure_images_present start; then
+  emit_payload "NO-GO" "managed_runtime_required_image_missing" "NO-GO"
+  exit 39
+fi
+
+if ! ensure_runtime_secrets; then
+  emit_payload "NO-GO" "managed_wsl2_runtime_secret_init_failed" "NO-GO"
+  exit 39
+fi
+
+compose_result=0
+verify_compose_payload || compose_result=$?
+case "$compose_result" in
+  0) ;;
+  1) emit_payload "NO-GO" "managed_wsl2_runtime_compose_file_missing" "NO-GO"; exit 40 ;;
+  3) emit_payload "NO-GO" "managed_wsl2_compose_pull_policy_missing" "NO-GO"; exit 41 ;;
+  4) emit_payload "NO-GO" "managed_wsl2_compose_build_not_allowed" "NO-GO"; exit 42 ;;
+  *) emit_payload "NO-GO" "managed_wsl2_compose_image_mismatch" "NO-GO"; exit 43 ;;
+esac
+
+if ! run_compose_bootstrap_gates; then
+  emit_payload "NO-GO" "managed_wsl2_runtime_bootstrap_gates_failed" "NO-GO"
+  exit 44
+fi
+
+if ! run_compose_up; then
+  emit_payload "NO-GO" "managed_wsl2_compose_up_failed" "NO-GO"
+  exit 45
+fi
+
+if ! wait_for_service_readiness; then
+  services_json="$(json_services_fast)"
+  failures_json="$(json_failures_fast)"
+  emit_payload "NO-GO" "hub_backend_services_unhealthy_or_timeout" "NO-GO" "NO-GO" "$services_json" "$failures_json"
+  exit 46
+fi
+services_json="$(json_services_fast)"
+failures_json="$(json_failures_fast)"
+front_partial="NO-GO"
+if wait_for_front_door_readiness; then
+  front_partial="GO"
+fi
+if [ "$front_door_health_status" != "GO" ]; then
+  emit_payload "NO-GO" "managed_wsl2_front_door_health_not_go" "NO-GO" "$front_partial" "$services_json" "$failures_json"
+  exit 47
+fi
+
+emit_payload "GO" "managed_wsl2_runtime_start_go" "GO" "$front_partial" "$services_json" "$failures_json"
+exit 0

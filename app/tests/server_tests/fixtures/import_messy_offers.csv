@@ -1,0 +1,4 @@
+listing_id,action,type,wilaya,location,budget,surface,beds,floor,furnished,elevator,accessibility_supported,remarks
+__LISTING_ID__,sell,apartment,16,Hydra,15000000,120,3,2,no,yes,yes,OFF_OK_VALID
+__LISTING_ID__,sell,apartment,16,Ben Aknoun,,95,2,1,no,yes,no,OFF_REVIEW_MISSING_BUDGET
+__LISTING_ID__,sell,apartment,16,XQZZY_UNKNOWN_BLOCK,9000000,100,2,1,no,yes,no,OFF_REVIEW_LOW_CONF

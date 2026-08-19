@@ -1,0 +1,17 @@
+{
+  "summary_state": {
+    "status": "completed",
+    "terminal_reason": "success",
+    "result_zero_change": false
+  },
+  "expected": {
+    "summary": {
+      "step_label": "Import summary",
+      "status": "completed",
+      "terminal_reason": "success",
+      "result_zero_change": false,
+      "tone": "success",
+      "auto_close": true
+    }
+  }
+}

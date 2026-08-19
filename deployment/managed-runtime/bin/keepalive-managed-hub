@@ -1,0 +1,29 @@
+#!/bin/sh
+set -eu
+. /opt/immoapp/runtime/bin/managed-hub-common
+
+mkdir -p "$runtime_state_dir"
+pid_file="$runtime_state_dir/managed-hub-keepalive.pid"
+
+if [ -f "$pid_file" ]; then
+  old_pid="$(cat "$pid_file" 2>/dev/null || true)"
+  case "$old_pid" in
+    ""|*[!0-9]*) ;;
+    *)
+      if kill -0 "$old_pid" 2>/dev/null; then
+        exit 0
+      fi
+      ;;
+  esac
+fi
+
+printf "%s\n" "$$" >"$pid_file"
+sleep_pid=""
+trap 'if [ -n "$sleep_pid" ]; then kill "$sleep_pid" 2>/dev/null || true; fi; rm -f "$pid_file"; exit 0' INT TERM
+
+while :; do
+  sleep "${IMMOAPP_MANAGED_KEEPALIVE_INTERVAL_SECONDS:-300}" &
+  sleep_pid="$!"
+  wait "$sleep_pid" || true
+  sleep_pid=""
+done

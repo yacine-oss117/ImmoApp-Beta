@@ -1,0 +1,4 @@
+client_id,action,type,wilaya,locations,budget_min,budget_max,surface_min,surface_max,beds_min,floor_min,floor_max,furnished,elevator,accessibility_required,remarks
+__CLIENT_ID__,buy,apartment,16,Hydra,1200000,2400000,60,110,2,0,6,any,oui,non,DEM_OK_VALID
+__CLIENT_ID__,buy,apartment,16,Ben Aknoun,,2000000,70,130,2,1,5,any,yes,no,DEM_REVIEW_MISSING_RANGE
+__CLIENT_ID__,buy,apartment,NowhereLand,Unknown Place,900000,1900000,50,100,1,0,4,any,oui,non,DEM_REVIEW_LOW_CONF

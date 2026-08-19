@@ -1,0 +1,24 @@
+# Normalize text in the repository. This prevents Windows checkout settings from
+# creating noisy line-ending diffs after the initial commit.
+* text=auto eol=lf
+
+# Windows command files are the only text files that should keep CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binary assets and release artifacts.
+*.bmp binary
+*.db binary
+*.dll binary
+*.dump binary
+*.exe binary
+*.gif binary
+*.ico binary
+*.jpg binary
+*.jpeg binary
+*.pdf binary
+*.png binary
+*.pyd binary
+*.sqlite binary
+*.webp binary
+*.zip binary

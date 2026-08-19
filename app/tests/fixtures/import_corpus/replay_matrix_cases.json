@@ -1,0 +1,376 @@
+[
+  {
+    "name": "flat_client_ready",
+    "filename": "flat_client_ready.csv",
+    "headers": ["family_name", "phone", "status"],
+    "rows": [
+      {"family_name": "Lina", "phone": "0555100001", "status": "active"},
+      {"family_name": "Nora", "phone": "0555100002", "status": "active"}
+    ],
+    "job": {
+      "detected_entity": "client",
+      "detected_columns": [
+        {"header": "family_name", "detected_type": "family_name", "confidence": 0.99},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.99},
+        {"header": "status", "detected_type": "status", "confidence": 0.95}
+      ],
+      "column_mapping": {"family_name": "family_name", "phone": "phone", "status": "status"},
+      "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "client_side", "detected_entity": "client", "confidence": 0.92}
+    },
+    "preview_request": {"entity_type": "client"},
+    "expected": {"manual_mapping_required": false, "mapping_palette_mode": "entity_only", "entity_counts": {"client": 2}}
+  },
+  {
+    "name": "flat_client_email_ready",
+    "filename": "flat_client_email_ready.csv",
+    "headers": ["family_name", "phone", "email"],
+    "rows": [{"family_name": "Ilyes", "phone": "0555100003", "email": "i@example.test"}],
+    "job": {
+      "detected_entity": "client",
+      "detected_columns": [
+        {"header": "family_name", "detected_type": "family_name", "confidence": 0.99},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.99},
+        {"header": "email", "detected_type": "email", "confidence": 0.9}
+      ],
+      "column_mapping": {"family_name": "family_name", "phone": "phone"},
+      "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "client_side", "detected_entity": "client", "confidence": 0.9}
+    },
+    "preview_request": {"entity_type": "client"},
+    "expected": {"manual_mapping_required": false, "mapping_palette_mode": "entity_only", "entity_counts": {"client": 1}}
+  },
+  {
+    "name": "flat_listing_ready",
+    "filename": "flat_listing_ready.csv",
+    "headers": ["family_name", "phone", "remarks"],
+    "rows": [{"family_name": "Owner", "phone": "0555100004", "remarks": "clean"}],
+    "job": {
+      "detected_entity": "listing",
+      "detected_columns": [
+        {"header": "family_name", "detected_type": "family_name", "confidence": 0.99},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.99},
+        {"header": "remarks", "detected_type": "notes", "confidence": 0.9}
+      ],
+      "column_mapping": {"family_name": "family_name", "phone": "phone", "remarks": "remarks"},
+      "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "listing_side", "detected_entity": "listing", "confidence": 0.9}
+    },
+    "preview_request": {"entity_type": "listing"},
+    "expected": {"manual_mapping_required": false, "mapping_palette_mode": "entity_only", "entity_counts": {"listing": 1}}
+  },
+  {
+    "name": "flat_listing_two_rows_ready",
+    "filename": "flat_listing_two_rows_ready.csv",
+    "headers": ["family_name", "phone"],
+    "rows": [
+      {"family_name": "Owner A", "phone": "0555100005"},
+      {"family_name": "Owner B", "phone": "0555100006"}
+    ],
+    "job": {
+      "detected_entity": "listing",
+      "detected_columns": [
+        {"header": "family_name", "detected_type": "family_name", "confidence": 0.99},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.99}
+      ],
+      "column_mapping": {"family_name": "family_name", "phone": "phone"},
+      "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "listing_side", "detected_entity": "listing", "confidence": 0.9}
+    },
+    "preview_request": {"entity_type": "listing"},
+    "expected": {"manual_mapping_required": false, "mapping_palette_mode": "entity_only", "entity_counts": {"listing": 2}}
+  },
+  {
+    "name": "clean_listing_offer_bundle",
+    "filename": "clean_listing_offer_bundle.csv",
+    "headers": ["family_name", "phone", "location", "budget"],
+    "rows": [
+      {"family_name": "Owner", "phone": "0555100007", "location": "", "budget": ""},
+      {"family_name": "Owner", "phone": "0555100007", "location": "Hydra", "budget": "9000000"}
+    ],
+    "job": {
+      "detected_entity": "listing",
+      "detected_columns": [
+        {"header": "family_name", "detected_type": "family_name", "confidence": 0.99},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.99},
+        {"header": "location", "detected_type": "location", "confidence": 0.95},
+        {"header": "budget", "detected_type": "price", "confidence": 0.95}
+      ],
+      "column_mapping": {"family_name": "family_name", "phone": "phone", "location": "location", "budget": "budget"},
+      "final_inference": {"bundle_mode": "same_side_bundle", "topology_side_hint": "listing_side", "detected_entity": "listing", "confidence": 0.95}
+    },
+    "preview_request": {"entity_type": "listing"},
+    "expected": {"manual_mapping_required": false, "mapping_palette_mode": "same_side_union", "mapping_candidate_entities": ["listing", "offer"], "entity_counts": {"listing": 1, "offer": 1}}
+  },
+  {
+    "name": "client_bundle_repeated_root",
+    "filename": "client_bundle_repeated_root.csv",
+    "headers": ["family_name", "phone", "locations", "budget_min"],
+    "rows": [
+      {"family_name": "Yacine", "phone": "0555100008", "locations": "", "budget_min": ""},
+      {"family_name": "Yacine", "phone": "0555100008", "locations": "Hydra", "budget_min": "1000000"},
+      {"family_name": "Yacine", "phone": "0555100008", "locations": "El Biar", "budget_min": "2000000"}
+    ],
+    "job": {
+      "detected_entity": "client",
+      "detected_columns": [
+        {"header": "family_name", "detected_type": "family_name", "confidence": 0.99},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.99},
+        {"header": "locations", "detected_type": "locations", "confidence": 0.95},
+        {"header": "budget_min", "detected_type": "budget_min", "confidence": 0.95}
+      ],
+      "column_mapping": {"family_name": "family_name", "phone": "phone", "locations": "locations", "budget_min": "budget_min"},
+      "final_inference": {"bundle_mode": "same_side_bundle", "topology_side_hint": "client_side", "detected_entity": "client", "confidence": 0.95}
+    },
+    "preview_request": {"entity_type": "client"},
+    "expected": {"manual_mapping_required": false, "mapping_palette_mode": "same_side_union", "entity_counts": {"client": 1, "demande": 2}}
+  },
+  {
+    "name": "listing_bundle_repeated_root",
+    "filename": "listing_bundle_repeated_root.csv",
+    "headers": ["family_name", "phone", "location", "budget"],
+    "rows": [
+      {"family_name": "Owner", "phone": "0555100009", "location": "", "budget": ""},
+      {"family_name": "Owner", "phone": "0555100009", "location": "Hydra", "budget": "9000000"},
+      {"family_name": "Owner", "phone": "0555100009", "location": "Cheraga", "budget": "12000000"}
+    ],
+    "job": {
+      "detected_entity": "listing",
+      "detected_columns": [
+        {"header": "family_name", "detected_type": "family_name", "confidence": 0.99},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.99},
+        {"header": "location", "detected_type": "location", "confidence": 0.95},
+        {"header": "budget", "detected_type": "price", "confidence": 0.95}
+      ],
+      "column_mapping": {"family_name": "family_name", "phone": "phone", "location": "location", "budget": "budget"},
+      "final_inference": {"bundle_mode": "same_side_bundle", "topology_side_hint": "listing_side", "detected_entity": "listing", "confidence": 0.95}
+    },
+    "preview_request": {"entity_type": "listing"},
+    "expected": {"manual_mapping_required": false, "mapping_palette_mode": "same_side_union", "entity_counts": {"listing": 1, "offer": 2}}
+  },
+  {
+    "name": "weak_client_demande_recovery",
+    "filename": "weak_client_demande_recovery.csv",
+    "headers": ["owner", "phone", "action", "locations", "budget_min"],
+    "rows": [{"owner": "Samir", "phone": "0555100010", "action": "BUY", "locations": "Hydra", "budget_min": "1400000"}],
+    "job": {
+      "detected_entity": "client",
+      "detected_columns": [
+        {"header": "owner", "detected_type": "name", "confidence": 0.95},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.95},
+        {"header": "action", "detected_type": "action", "confidence": 0.3},
+        {"header": "locations", "detected_type": "locations", "confidence": 0.3},
+        {"header": "budget_min", "detected_type": "budget_min", "confidence": 0.3}
+      ],
+      "column_mapping": {"family_name": "owner", "phone": "phone"},
+      "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "client_side", "detected_entity": "client", "confidence": 0.42}
+    },
+    "preview_request": {"entity_type": "client"},
+    "expected": {"manual_mapping_required": true, "mapping_palette_mode": "recovery_union", "mapping_candidate_entities": ["client", "demande"]}
+  },
+  {
+    "name": "weak_listing_offer_geo_recovery",
+    "filename": "weak_listing_offer_geo_recovery.csv",
+    "headers": ["owner", "phone", "link", "latitude", "budget"],
+    "rows": [{"owner": "Meriem", "phone": "0555100011", "link": "https://example.test", "latitude": "36.7", "budget": "9000000"}],
+    "job": {
+      "detected_entity": "listing",
+      "detected_columns": [
+        {"header": "owner", "detected_type": "name", "confidence": 0.95},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.95},
+        {"header": "link", "detected_type": "link", "confidence": 0.3},
+        {"header": "latitude", "detected_type": "latitude", "confidence": 0.3},
+        {"header": "budget", "detected_type": "price", "confidence": 0.3}
+      ],
+      "column_mapping": {"family_name": "owner", "phone": "phone"},
+      "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "listing_side", "detected_entity": "listing", "confidence": 0.42}
+    },
+    "preview_request": {"entity_type": "listing"},
+    "expected": {"manual_mapping_required": true, "mapping_palette_mode": "recovery_union", "mapping_candidate_entities": ["listing", "offer"]}
+  },
+  {
+    "name": "mixed_blocked_manual",
+    "filename": "mixed_blocked_manual.csv",
+    "headers": ["family_name", "phone", "locations", "location", "budget_min", "budget"],
+    "rows": [{"family_name": "Mixed", "phone": "0555100012", "locations": "Hydra", "location": "Hydra", "budget_min": "1000000", "budget": "9000000"}],
+    "job": {
+      "detected_entity": "listing",
+      "detected_columns": [
+        {"header": "family_name", "detected_type": "family_name", "confidence": 0.95},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.95},
+        {"header": "locations", "detected_type": "locations", "confidence": 0.45},
+        {"header": "location", "detected_type": "location", "confidence": 0.45},
+        {"header": "budget_min", "detected_type": "budget_min", "confidence": 0.45},
+        {"header": "budget", "detected_type": "price", "confidence": 0.45}
+      ],
+      "column_mapping": {"family_name": "family_name", "phone": "phone"},
+      "final_inference": {"bundle_mode": "mixed_blocked", "topology_side_hint": "mixed", "detected_entity": "listing", "confidence": 0.4}
+    },
+    "preview_request": {"entity_type": "listing"},
+    "expected": {"manual_mapping_required": true, "mapping_palette_mode": "entity_only"}
+  },
+  {
+    "name": "workbook_conflict_manual",
+    "filename": "workbook_conflict_manual.csv",
+    "headers": ["owner", "phone", "action"],
+    "rows": [{"owner": "Conflict", "phone": "0555100013", "action": "buy"}],
+    "job": {
+      "detected_entity": "client",
+      "detected_columns": [
+        {"header": "owner", "detected_type": "name", "confidence": 0.95},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.95},
+        {"header": "action", "detected_type": "action", "confidence": 0.4}
+      ],
+      "column_mapping": {"family_name": "owner", "phone": "phone"},
+      "inference_summary": {
+        "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "client_side", "detected_entity": "client", "confidence": 0.6},
+        "sheet_profiles": [
+          {"sheet_name": "Clients", "confidence": 0.8, "dominant_topology_side": "client_side", "dominant_bundle_mode": "single_entity"},
+          {"sheet_name": "Listings", "confidence": 0.8, "dominant_topology_side": "listing_side", "dominant_bundle_mode": "same_side_bundle"}
+        ]
+      }
+    },
+    "preview_request": {"entity_type": "client"},
+    "expected": {"manual_mapping_required": true, "mapping_palette_mode": "entity_only"}
+  },
+  {
+    "name": "low_confidence_flat_client_manual",
+    "filename": "low_confidence_flat_client_manual.csv",
+    "headers": ["col_a", "col_b", "col_c", "col_d", "col_e"],
+    "rows": [{"col_a": "Lina", "col_b": "0555100014", "col_c": "Hydra", "col_d": "active", "col_e": "note"}],
+    "job": {
+      "detected_entity": "client",
+      "detected_columns": [
+        {"header": "col_a", "detected_type": "name", "confidence": 0.35},
+        {"header": "col_b", "detected_type": "phone", "confidence": 0.35},
+        {"header": "col_c", "detected_type": "unknown", "confidence": 0.1},
+        {"header": "col_d", "detected_type": "unknown", "confidence": 0.1},
+        {"header": "col_e", "detected_type": "unknown", "confidence": 0.1}
+      ],
+      "column_mapping": {"family_name": "col_a", "phone": "col_b"},
+      "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "client_side", "detected_entity": "client", "confidence": 0.3}
+    },
+    "preview_request": {"entity_type": "client"},
+    "expected": {"manual_mapping_required": true, "mapping_palette_mode": "entity_only"}
+  },
+  {
+    "name": "blocked_child_only_demande",
+    "filename": "blocked_child_only_demande.csv",
+    "headers": ["action", "locations", "budget_min"],
+    "rows": [{"action": "buy", "locations": "Hydra", "budget_min": "1200000"}],
+    "job": {
+      "detected_entity": "demande",
+      "detected_columns": [
+        {"header": "action", "detected_type": "action", "confidence": 0.95},
+        {"header": "locations", "detected_type": "locations", "confidence": 0.95},
+        {"header": "budget_min", "detected_type": "budget_min", "confidence": 0.95}
+      ],
+      "column_mapping": {"action": "action", "locations": "locations", "budget_min": "budget_min"},
+      "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "client_side", "detected_entity": "demande", "confidence": 0.8}
+    },
+    "preview_request": {"entity_type": "demande"},
+    "expected_status_code": 409,
+    "expected": {"detail": "Requests-only files aren't supported. Import clients with their requests in the same file."}
+  },
+  {
+    "name": "blocked_child_only_offer",
+    "filename": "blocked_child_only_offer.csv",
+    "headers": ["action", "location", "budget"],
+    "rows": [{"action": "sell", "location": "Hydra", "budget": "9000000"}],
+    "job": {
+      "detected_entity": "offer",
+      "detected_columns": [
+        {"header": "action", "detected_type": "action", "confidence": 0.95},
+        {"header": "location", "detected_type": "location", "confidence": 0.95},
+        {"header": "budget", "detected_type": "price", "confidence": 0.95}
+      ],
+      "column_mapping": {"action": "action", "location": "location", "budget": "budget"},
+      "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "listing_side", "detected_entity": "offer", "confidence": 0.8}
+    },
+    "preview_request": {"entity_type": "offer"},
+    "expected_status_code": 409,
+    "expected": {"detail": "Offers-only files aren't supported. Import properties with their offers in the same file."}
+  },
+  {
+    "name": "client_bundle_two_demandes",
+    "filename": "client_bundle_two_demandes.csv",
+    "headers": ["family_name", "phone", "locations", "budget_min", "surface_min"],
+    "rows": [
+      {"family_name": "Nabil", "phone": "0555100015", "locations": "", "budget_min": "", "surface_min": ""},
+      {"family_name": "Nabil", "phone": "0555100015", "locations": "Hydra", "budget_min": "1200000", "surface_min": "70"},
+      {"family_name": "Nabil", "phone": "0555100015", "locations": "Cheraga", "budget_min": "2500000", "surface_min": "100"}
+    ],
+    "job": {
+      "detected_entity": "client",
+      "detected_columns": [
+        {"header": "family_name", "detected_type": "family_name", "confidence": 0.99},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.99},
+        {"header": "locations", "detected_type": "locations", "confidence": 0.95},
+        {"header": "budget_min", "detected_type": "budget_min", "confidence": 0.95},
+        {"header": "surface_min", "detected_type": "surface_min", "confidence": 0.95}
+      ],
+      "column_mapping": {"family_name": "family_name", "phone": "phone", "locations": "locations", "budget_min": "budget_min", "surface_min": "surface_min"},
+      "final_inference": {"bundle_mode": "same_side_bundle", "topology_side_hint": "client_side", "detected_entity": "client", "confidence": 0.96}
+    },
+    "preview_request": {"entity_type": "client"},
+    "expected": {"mapping_palette_mode": "same_side_union", "entity_counts": {"client": 1, "demande": 2}}
+  },
+  {
+    "name": "listing_bundle_two_offers",
+    "filename": "listing_bundle_two_offers.csv",
+    "headers": ["family_name", "phone", "location", "budget", "surface"],
+    "rows": [
+      {"family_name": "Owner", "phone": "0555100016", "location": "", "budget": "", "surface": ""},
+      {"family_name": "Owner", "phone": "0555100016", "location": "Hydra", "budget": "9000000", "surface": "110"},
+      {"family_name": "Owner", "phone": "0555100016", "location": "Cheraga", "budget": "12000000", "surface": "140"}
+    ],
+    "job": {
+      "detected_entity": "listing",
+      "detected_columns": [
+        {"header": "family_name", "detected_type": "family_name", "confidence": 0.99},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.99},
+        {"header": "location", "detected_type": "location", "confidence": 0.95},
+        {"header": "budget", "detected_type": "price", "confidence": 0.95},
+        {"header": "surface", "detected_type": "surface", "confidence": 0.95}
+      ],
+      "column_mapping": {"family_name": "family_name", "phone": "phone", "location": "location", "budget": "budget", "surface": "surface"},
+      "final_inference": {"bundle_mode": "same_side_bundle", "topology_side_hint": "listing_side", "detected_entity": "listing", "confidence": 0.96}
+    },
+    "preview_request": {"entity_type": "listing"},
+    "expected": {"mapping_palette_mode": "same_side_union", "entity_counts": {"listing": 1, "offer": 2}}
+  },
+  {
+    "name": "recovery_union_client_minimal",
+    "filename": "recovery_union_client_minimal.csv",
+    "headers": ["owner", "phone", "locations", "surface_min"],
+    "rows": [{"owner": "Sara", "phone": "0555100017", "locations": "Hydra", "surface_min": "70"}],
+    "job": {
+      "detected_entity": "client",
+      "detected_columns": [
+        {"header": "owner", "detected_type": "name", "confidence": 0.95},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.95},
+        {"header": "locations", "detected_type": "locations", "confidence": 0.3},
+        {"header": "surface_min", "detected_type": "surface_min", "confidence": 0.3}
+      ],
+      "column_mapping": {"family_name": "owner", "phone": "phone"},
+      "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "client_side", "detected_entity": "client", "confidence": 0.41}
+    },
+    "preview_request": {"entity_type": "client"},
+    "expected": {"manual_mapping_required": true, "mapping_palette_mode": "recovery_union", "mapping_candidate_entities": ["client", "demande"]}
+  },
+  {
+    "name": "recovery_union_listing_minimal",
+    "filename": "recovery_union_listing_minimal.csv",
+    "headers": ["owner", "phone", "location", "surface"],
+    "rows": [{"owner": "Karim", "phone": "0555100018", "location": "Hydra", "surface": "110"}],
+    "job": {
+      "detected_entity": "listing",
+      "detected_columns": [
+        {"header": "owner", "detected_type": "name", "confidence": 0.95},
+        {"header": "phone", "detected_type": "phone", "confidence": 0.95},
+        {"header": "location", "detected_type": "location", "confidence": 0.3},
+        {"header": "surface", "detected_type": "surface", "confidence": 0.3}
+      ],
+      "column_mapping": {"family_name": "owner", "phone": "phone"},
+      "final_inference": {"bundle_mode": "single_entity", "topology_side_hint": "listing_side", "detected_entity": "listing", "confidence": 0.41}
+    },
+    "preview_request": {"entity_type": "listing"},
+    "expected": {"manual_mapping_required": true, "mapping_palette_mode": "recovery_union", "mapping_candidate_entities": ["listing", "offer"]}
+  }
+]

@@ -1,0 +1,27 @@
+{
+  "status_payloads": [
+    {
+      "status": "running",
+      "wait_state": "waiting_for_worker",
+      "stalled": true,
+      "stalled_reason": "worker_not_picked_up",
+      "cancellation_state": "active",
+      "progress": 0,
+      "can_cancel": true,
+      "can_close": true
+    }
+  ],
+  "expected": {
+    "execution": [
+      {
+        "step_label": "Prepare your import",
+        "wait_state": "waiting_for_worker",
+        "stalled": true,
+        "stalled_reason": "worker_not_picked_up",
+        "cancellation_state": "active",
+        "progress": 0,
+        "allowed_actions": ["close", "cancel", "retry_status"]
+      }
+    ]
+  }
+}

@@ -1,0 +1,39 @@
+service: immoapp
+window: 30d
+slo:
+  api_availability:
+    objective: 99.9
+    source: http_requests_total
+    error_budget: 0.1
+  api_latency:
+    objective_p95_ms:
+      health: 150
+      dashboard: 700
+      match_cache_reads: 300
+    source: http_server_duration_ms
+  background_tasks:
+    objective_success_rate: 99.5
+    source: celery_task_events
+  queue_backlog:
+    max_lag_seconds:
+      default: 120
+      maintenance: 300
+    source: celery_queue_lag_seconds
+  db_pool:
+    max_saturation_percent: 85
+    source: db_pool_in_use_ratio
+
+alerts:
+  - id: api_5xx_rate_high
+    condition: "5xx_rate > 2% for 5m"
+    severity: critical
+  - id: api_p95_latency_high
+    condition: "p95_latency > target for 10m"
+    severity: warning
+  - id: queue_lag_high
+    condition: "maintenance_queue_lag > 300s"
+    severity: warning
+  - id: restore_drill_stale
+    condition: "last_restore_drill_success_age_days > 31"
+    severity: critical
+

@@ -1,0 +1,606 @@
+x-default-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  rabbitmq-init:
+    image: immoapp-managed/busybox:1.36
+    pull_policy: never
+    command: sh -ec "mkdir -p /var/lib/rabbitmq && chown -R 999:999 /var/lib/rabbitmq"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: "no"
+    logging: *default-logging
+
+  db:
+    image: immoapp-managed/postgis:18-3.6
+    pull_policy: never
+    restart: unless-stopped
+    command:
+      - postgres
+      - -c
+      - max_connections=${POSTGRES_MAX_CONNECTIONS_DOCKER:-300}
+      - -c
+      - superuser_reserved_connections=${POSTGRES_SUPERUSER_RESERVED_CONNECTIONS_DOCKER:-10}
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-immoapp}
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:-immoapp}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-change-before-start}
+      IMMOAPP_APP_DB_USER: ${POSTGRES_USER:-immoapp_app}
+      IMMOAPP_APP_DB_PASSWORD: ${POSTGRES_PASSWORD:-change-before-start}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_ADMIN_USER:-immoapp} -d ${POSTGRES_DB:-immoapp}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  db-app-role-init:
+    image: immoapp-managed/postgis:18-3.6
+    pull_policy: never
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGPASSWORD: ${POSTGRES_ADMIN_PASSWORD:-change-before-start}
+      POSTGRES_DB: ${POSTGRES_DB:-immoapp}
+      POSTGRES_ADMIN_USER: ${POSTGRES_ADMIN_USER:-immoapp}
+      POSTGRES_USER: ${POSTGRES_USER:-immoapp_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-before-start}
+    entrypoint: /bin/sh
+    command:
+      - -ec
+      - |
+        psql -v ON_ERROR_STOP=1 -h db -U "$$POSTGRES_ADMIN_USER" -d "$$POSTGRES_DB" \
+          -v app_user="$$POSTGRES_USER" \
+          -v app_password="$$POSTGRES_PASSWORD" <<'SQL'
+        SELECT format('CREATE ROLE %I LOGIN', :'app_user') AS create_role
+        WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = :'app_user');
+        \gexec
+
+        SELECT format(
+          'ALTER ROLE %I WITH PASSWORD %L NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT NOBYPASSRLS',
+          :'app_user',
+          :'app_password'
+        ) AS alter_role;
+        \gexec
+
+        SELECT format('GRANT CONNECT ON DATABASE %I TO %I', current_database(), :'app_user') AS grant_connect;
+        \gexec
+
+        SELECT format('GRANT USAGE ON SCHEMA public TO %I', :'app_user') AS grant_usage_schema;
+        \gexec
+
+        SELECT format('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO %I', :'app_user') AS grant_tables;
+        \gexec
+
+        SELECT format('GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA public TO %I', :'app_user') AS grant_sequences;
+        \gexec
+
+        SELECT format('ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO %I', :'app_user') AS alter_default_tables;
+        \gexec
+
+        SELECT format('ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO %I', :'app_user') AS alter_default_sequences;
+        \gexec
+        SQL
+    restart: "no"
+    logging: *default-logging
+
+  rabbitmq:
+    image: immoapp-managed/rabbitmq:3.13-management
+    pull_policy: never
+    restart: unless-stopped
+    depends_on:
+      rabbitmq-init:
+        condition: service_completed_successfully
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-immoapp}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-change-before-start}
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 15s
+      retries: 20
+      start_period: 120s
+
+  valkey:
+    image: immoapp-managed/valkey:9.0.1
+    pull_policy: never
+    restart: unless-stopped
+    volumes:
+      - valkey_data:/data
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  openbao:
+    image: immoapp-managed/openbao:2.3.1
+    pull_policy: never
+    restart: unless-stopped
+    command: server -config=/openbao/config/openbao.hcl
+    cap_add:
+      - IPC_LOCK
+    volumes:
+      - /opt/immoapp/runtime/openbao/openbao.hcl:/openbao/config/openbao.hcl:ro
+      - openbao_data:/openbao/file
+      - openbao_logs:/openbao/logs
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "bao status -address=http://127.0.0.1:8200 | grep -q 'Initialized[[:space:]]*true' && bao status -address=http://127.0.0.1:8200 | grep -q 'Sealed[[:space:]]*false'"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  openbao-init:
+    image: immoapp-managed/server:local
+    pull_policy: never
+    user: "0:0"
+    depends_on:
+      openbao:
+        condition: service_started
+    environment:
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-0}
+      BAO_TIMEOUT: ${BAO_TIMEOUT_DOCKER:-8}
+      BAO_BOOTSTRAP_TOKEN_FILE: /run/immoapp-secrets/openbao.token
+      BAO_UNSEAL_KEY_FILE: /run/immoapp-secrets/openbao.unseal
+    command: ["python", "-m", "server.secret_store.openbao_runtime_init"]
+    restart: "no"
+    volumes:
+      - /opt/immoapp/runtime/secrets:/run/immoapp-secrets
+    logging: *default-logging
+
+  openbao-seed:
+    image: immoapp-managed/server:local
+    pull_policy: never
+    user: "0:0"
+    depends_on:
+      openbao-init:
+        condition: service_completed_successfully
+    environment:
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-0}
+      BAO_TIMEOUT: ${BAO_TIMEOUT_DOCKER:-8}
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp
+      BAO_TOKEN: ""
+      BAO_TOKEN_FILE: /run/immoapp-secrets/openbao.token
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+      IMMOAPP_BOOTSTRAP_SECRETS_FILE: /run/immoapp-secrets/immoapp-managed-secrets.json
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,web,caddy}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT_DOCKER:-0}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE_DOCKER:-0}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE_DOCKER:-0}
+      OPENBAO_APP_ROLE_NAME: ${OPENBAO_APP_ROLE_NAME_DOCKER:-immoapp-server-managed}
+      OPENBAO_APP_POLICY_NAME: ${OPENBAO_APP_POLICY_NAME_DOCKER:-immoapp-app-secrets-read}
+      OPENBAO_APPROLE_SECRET_ID_TTL: ${OPENBAO_APPROLE_SECRET_ID_TTL_DOCKER:-168h}
+      POSTGRES_DB: ${POSTGRES_DB:-immoapp}
+      POSTGRES_USER: ${POSTGRES_USER:-immoapp_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-before-start}
+      POSTGRES_ADMIN_USER: ${POSTGRES_ADMIN_USER:-immoapp}
+      POSTGRES_ADMIN_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-change-before-start}
+      RABBITMQ_USER: ${RABBITMQ_USER:-immoapp}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-change-before-start}
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:-change-before-start}@rabbitmq:5672//
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-immoapp}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-before-start}
+      MINIO_KMS_SECRET_KEY: ${MINIO_KMS_SECRET_KEY:-immoapp-kms-key:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-immoapp}
+      STORAGE_ACCESS_KEY: ${MINIO_ROOT_USER:-immoapp}
+      STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-change-before-start}
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+    command: ["python", "-m", "server.secret_store.openbao_runtime_seed"]
+    restart: "no"
+    volumes:
+      - /opt/immoapp/runtime/secrets:/run/immoapp-secrets
+    logging: *default-logging
+
+  db-schema-prepare:
+    image: immoapp-managed/server:local
+    pull_policy: never
+    user: "0:0"
+    depends_on:
+      db-app-role-init:
+        condition: service_completed_successfully
+      openbao-seed:
+        condition: service_completed_successfully
+    environment:
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_TOKEN: ""
+      BAO_TOKEN_FILE: ""
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-0}
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp
+      IMMOAPP_SECRETS_ALLOWLIST: ALE_,DJANGO_,IMMOAPP_,POSTGRES_,RABBITMQ_,CELERY_,MINIO_,STORAGE_,VALKEY_,CHANNEL_LAYER_,JWT_
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:-change-before-start}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,web,caddy}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT_DOCKER:-0}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE_DOCKER:-0}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE_DOCKER:-0}
+      IMMOAPP_SKIP_SCHEMA_INIT: "1"
+    command: ["sh", "-ec", "python -m server.secret_store.openbao_runtime_bootstrap && python server/manage.py immoapp_db_prepare"]
+    restart: "no"
+    volumes:
+      - app_data:/var/lib/immoapp
+      - /opt/immoapp/runtime/secrets:/run/immoapp-secrets:ro
+    logging: *default-logging
+
+  minio:
+    image: immoapp-managed/minio:RELEASE.2025-09-07T16-13-09Z
+    pull_policy: never
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-immoapp}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-before-start}
+      MINIO_KMS_SECRET_KEY: ${MINIO_KMS_SECRET_KEY:-immoapp-kms-key:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+    volumes:
+      - minio_data:/data
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: immoapp-managed/minio-mc:RELEASE.2025-08-13T08-35-41Z
+    pull_policy: never
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-immoapp}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-change-before-start}
+      STORAGE_BUCKET: ${STORAGE_BUCKET:-immoapp}
+    entrypoint: /bin/sh
+    command: -c "mc alias set local http://minio:9000 ${MINIO_ROOT_USER:-immoapp} ${MINIO_ROOT_PASSWORD:-change-before-start} && mc mb --ignore-existing local/${STORAGE_BUCKET:-immoapp} && mc anonymous set none local/${STORAGE_BUCKET:-immoapp} || true"
+    restart: "no"
+    logging: *default-logging
+
+  clamav:
+    image: immoapp-managed/clamav:1.4.3
+    pull_policy: never
+    restart: unless-stopped
+    volumes:
+      - clamav_data:/var/lib/clamav
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping=1 >/dev/null 2>&1"]
+      interval: 20s
+      timeout: 10s
+      retries: 30
+      start_period: 90s
+
+  app-data-init:
+    image: immoapp-managed/busybox:1.36
+    pull_policy: never
+    user: "0:0"
+    command: sh -ec "mkdir -p /var/lib/immoapp/cache /var/lib/immoapp/media /var/lib/immoapp/static && chown -R 10001:10001 /var/lib/immoapp"
+    restart: "no"
+    volumes:
+      - app_data:/var/lib/immoapp
+    logging: *default-logging
+
+  web:
+    image: immoapp-managed/server:local
+    pull_policy: never
+    environment:
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      DJANGO_DEBUG: "0"
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:-change-before-start}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_TOKEN: ""
+      BAO_TOKEN_FILE: ""
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-0}
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp
+      IMMOAPP_SECRETS_ALLOWLIST: ALE_,DJANGO_,IMMOAPP_,POSTGRES_,RABBITMQ_,CELERY_,MINIO_,STORAGE_,VALKEY_,CHANNEL_LAYER_,JWT_
+      IMMOAPP_PLATFORM_ADMIN_EMAIL: ${IMMOAPP_PLATFORM_ADMIN_EMAIL:-}
+      IMMOAPP_PUBLIC_BASE_URL: ${IMMOAPP_PUBLIC_BASE_URL:-}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,web,caddy}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT_DOCKER:-0}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE_DOCKER:-0}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE_DOCKER:-0}
+      IMMOAPP_WEB_RUNTIME: ${IMMOAPP_WEB_RUNTIME_DOCKER:-gunicorn_uvicorn}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS_DOCKER:-2}
+      ASGI_THREADS: ${ASGI_THREADS_DOCKER:-4}
+      PG_POOL_MAX: ${PG_POOL_MAX_WEB_DOCKER:-20}
+      IMMOAPP_SKIP_SCHEMA_INIT: "1"
+    command: ["sh", "-ec", "exec /app/deployment/docker/run_web.sh"]
+    depends_on:
+      app-data-init:
+        condition: service_completed_successfully
+      db-schema-prepare:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      clamav:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - app_data:/var/lib/immoapp
+      - /opt/immoapp/runtime/secrets:/run/immoapp-secrets:ro
+    logging: *default-logging
+
+  worker:
+    image: immoapp-managed/server:local
+    pull_policy: never
+    environment:
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_TOKEN: ""
+      BAO_TOKEN_FILE: ""
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-0}
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp
+      IMMOAPP_SECRETS_ALLOWLIST: ALE_,DJANGO_,IMMOAPP_,POSTGRES_,RABBITMQ_,CELERY_,MINIO_,STORAGE_,VALKEY_,CHANNEL_LAYER_,JWT_
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:-change-before-start}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,web,caddy}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT_DOCKER:-0}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE_DOCKER:-0}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE_DOCKER:-0}
+    command: ["sh", "-ec", "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app worker -l info -Q celery,default,maintenance -c ${CELERY_WORKER_CONCURRENCY_DOCKER:-2}"]
+    depends_on:
+      web:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - app_data:/var/lib/immoapp
+      - /opt/immoapp/runtime/secrets:/run/immoapp-secrets:ro
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "python -m celery -A server.immoapp_server.celery:celery_app inspect ping -d \"celery@$$HOSTNAME\" -t 5 >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  worker-import:
+    image: immoapp-managed/server:local
+    pull_policy: never
+    environment:
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_TOKEN: ""
+      BAO_TOKEN_FILE: ""
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-0}
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp
+      IMMOAPP_SECRETS_ALLOWLIST: ALE_,DJANGO_,IMMOAPP_,POSTGRES_,RABBITMQ_,CELERY_,MINIO_,STORAGE_,VALKEY_,CHANNEL_LAYER_,JWT_
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:-change-before-start}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,web,caddy}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT_DOCKER:-0}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE_DOCKER:-0}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE_DOCKER:-0}
+    command: ["sh", "-ec", "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app worker -l info -Q imports -c ${CELERY_IMPORT_CONCURRENCY_DOCKER:-2}"]
+    depends_on:
+      web:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - app_data:/var/lib/immoapp
+      - /opt/immoapp/runtime/secrets:/run/immoapp-secrets:ro
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "python -m celery -A server.immoapp_server.celery:celery_app inspect ping -d \"celery@$$HOSTNAME\" -t 5 >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  worker-rebuild:
+    image: immoapp-managed/server:local
+    pull_policy: never
+    environment:
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_TOKEN: ""
+      BAO_TOKEN_FILE: ""
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-0}
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp
+      IMMOAPP_SECRETS_ALLOWLIST: ALE_,DJANGO_,IMMOAPP_,POSTGRES_,RABBITMQ_,CELERY_,MINIO_,STORAGE_,VALKEY_,CHANNEL_LAYER_,JWT_
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:-change-before-start}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,web,caddy}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT_DOCKER:-0}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE_DOCKER:-0}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE_DOCKER:-0}
+    command: ["sh", "-ec", "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app worker -l info -Q rebuild_batch -c ${CELERY_REBUILD_CONCURRENCY_DOCKER:-1}"]
+    depends_on:
+      web:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - app_data:/var/lib/immoapp
+      - /opt/immoapp/runtime/secrets:/run/immoapp-secrets:ro
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "python -m celery -A server.immoapp_server.celery:celery_app inspect ping -d \"celery@$$HOSTNAME\" -t 5 >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  worker-match:
+    image: immoapp-managed/server:local
+    pull_policy: never
+    environment:
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_TOKEN: ""
+      BAO_TOKEN_FILE: ""
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-0}
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp
+      IMMOAPP_SECRETS_ALLOWLIST: ALE_,DJANGO_,IMMOAPP_,POSTGRES_,RABBITMQ_,CELERY_,MINIO_,STORAGE_,VALKEY_,CHANNEL_LAYER_,JWT_
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:-change-before-start}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,web,caddy}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT_DOCKER:-0}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE_DOCKER:-0}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE_DOCKER:-0}
+    command: ["sh", "-ec", "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app worker -l info -Q match_pairs -c ${CELERY_MATCH_PAIRS_CONCURRENCY_DOCKER:-1}"]
+    depends_on:
+      web:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - app_data:/var/lib/immoapp
+      - /opt/immoapp/runtime/secrets:/run/immoapp-secrets:ro
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "python -m celery -A server.immoapp_server.celery:celery_app inspect ping -d \"celery@$$HOSTNAME\" -t 5 >/dev/null 2>&1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  beat:
+    image: immoapp-managed/server:local
+    pull_policy: never
+    environment:
+      BAO_ADDR: ${BAO_ADDR_DOCKER:-http://openbao:8200}
+      BAO_TOKEN: ""
+      BAO_TOKEN_FILE: ""
+      BAO_APPROLE_FILE: /run/immoapp-secrets/openbao-approle.json
+      BAO_VERIFY_SSL: ${BAO_VERIFY_SSL_DOCKER:-0}
+      IMMOAPP_SECRETS_PATH: secret/data/immoapp
+      IMMOAPP_SECRETS_ALLOWLIST: ALE_,DJANGO_,IMMOAPP_,POSTGRES_,RABBITMQ_,CELERY_,MINIO_,STORAGE_,VALKEY_,CHANNEL_LAYER_,JWT_
+      DJANGO_SETTINGS_MODULE: server.immoapp_server.settings
+      IMMOAPP_APPDATA_ROOT: /var/lib/immoapp
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      VALKEY_URL: redis://valkey:6379/1
+      CHANNEL_LAYER_URL: redis://valkey:6379/3
+      CELERY_BROKER_URL: amqp://${RABBITMQ_USER:-immoapp}:${RABBITMQ_PASSWORD:-change-before-start}@rabbitmq:5672//
+      CELERY_RESULT_BACKEND: redis://valkey:6379/2
+      STORAGE_ENDPOINT_URL: http://minio:9000
+      STORAGE_USE_SSL: "0"
+      STORAGE_CLAMD_HOST: clamav
+      STORAGE_CLAMD_PORT: "3310"
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-127.0.0.1,localhost,web,caddy}
+      SECURE_SSL_REDIRECT: ${SECURE_SSL_REDIRECT_DOCKER:-0}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE_DOCKER:-0}
+      CSRF_COOKIE_SECURE: ${CSRF_COOKIE_SECURE_DOCKER:-0}
+    command: ["sh", "-ec", "python -m server.secret_store.openbao_runtime_bootstrap && exec python -m celery -A server.immoapp_server.celery:celery_app beat -l info --pidfile=/tmp/celerybeat.pid"]
+    depends_on:
+      web:
+        condition: service_started
+    restart: unless-stopped
+    volumes:
+      - app_data:/var/lib/immoapp
+      - /opt/immoapp/runtime/secrets:/run/immoapp-secrets:ro
+    logging: *default-logging
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /tmp/celerybeat.pid && kill -0 $(cat /tmp/celerybeat.pid)"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  caddy:
+    image: immoapp-managed/caddy:2.9.1
+    pull_policy: never
+    restart: unless-stopped
+    environment:
+      IMMOAPP_UPSTREAM: web:8000
+      IMMOAPP_HUB_FRONT_DOOR_PORT: ${IMMOAPP_HUB_FRONT_DOOR_PORT:-8000}
+    ports:
+      - "${IMMOAPP_CADDY_BIND_HOST:-127.0.0.1}:${IMMOAPP_HUB_FRONT_DOOR_PORT:-8000}:8000"
+    depends_on:
+      web:
+        condition: service_started
+    volumes:
+      - /opt/immoapp/runtime/proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    logging: *default-logging
+
+volumes:
+  pgdata:
+  openbao_data:
+  openbao_logs:
+  rabbitmq_data:
+  valkey_data:
+  caddy_data:
+  caddy_config:
+  minio_data:
+  clamav_data:
+  app_data:

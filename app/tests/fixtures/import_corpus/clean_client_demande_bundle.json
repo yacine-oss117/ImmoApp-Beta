@@ -1,0 +1,96 @@
+{
+  "filename": "clean_client_demande_bundle.csv",
+  "headers": [
+    "family_name",
+    "phone",
+    "status",
+    "action",
+    "type",
+    "wilaya",
+    "locations",
+    "budget_min",
+    "budget_max",
+    "surface_min",
+    "surface_max",
+    "beds_min"
+  ],
+  "rows": [
+    {
+      "family_name": "Yacine",
+      "phone": "0555 001 001",
+      "status": "active",
+      "action": "",
+      "type": "",
+      "wilaya": "",
+      "locations": "",
+      "budget_min": "",
+      "budget_max": "",
+      "surface_min": "",
+      "surface_max": "",
+      "beds_min": ""
+    },
+    {
+      "family_name": "Yacine",
+      "phone": "0555 001 001",
+      "status": "",
+      "action": "buy",
+      "type": "apartment",
+      "wilaya": "16",
+      "locations": "Hydra",
+      "budget_min": "1200000",
+      "budget_max": "2400000",
+      "surface_min": "60",
+      "surface_max": "130",
+      "beds_min": "2"
+    }
+  ],
+  "job": {
+    "detected_entity": "client",
+    "detected_columns": [
+      { "header": "family_name", "detected_type": "family_name", "confidence": 0.99 },
+      { "header": "phone", "detected_type": "phone", "confidence": 0.99 },
+      { "header": "status", "detected_type": "status", "confidence": 0.95 },
+      { "header": "action", "detected_type": "action", "confidence": 0.95 },
+      { "header": "type", "detected_type": "type", "confidence": 0.95 },
+      { "header": "wilaya", "detected_type": "wilaya", "confidence": 0.95 },
+      { "header": "locations", "detected_type": "locations", "confidence": 0.95 },
+      { "header": "budget_min", "detected_type": "budget_min", "confidence": 0.95 },
+      { "header": "budget_max", "detected_type": "budget_max", "confidence": 0.95 },
+      { "header": "surface_min", "detected_type": "surface_min", "confidence": 0.95 },
+      { "header": "surface_max", "detected_type": "surface_max", "confidence": 0.95 },
+      { "header": "beds_min", "detected_type": "beds_min", "confidence": 0.95 }
+    ],
+    "column_mapping": {
+      "family_name": "family_name",
+      "phone": "phone",
+      "status": "status",
+      "action": "action",
+      "type": "type",
+      "wilaya": "wilaya",
+      "locations": "locations",
+      "budget_min": "budget_min",
+      "budget_max": "budget_max",
+      "surface_min": "surface_min",
+      "surface_max": "surface_max",
+      "beds_min": "beds_min"
+    },
+    "final_inference": {
+      "bundle_mode": "same_side_bundle",
+      "topology_side_hint": "client_side",
+      "detected_entity": "client",
+      "confidence": 0.96
+    }
+  },
+  "preview_request": {
+    "entity_type": "client"
+  },
+  "expected": {
+    "manual_mapping_required": false,
+    "mapping_palette_mode": "same_side_union",
+    "mapping_candidate_entities": ["client", "demande"],
+    "entity_counts": {
+      "client": 1,
+      "demande": 1
+    }
+  }
+}

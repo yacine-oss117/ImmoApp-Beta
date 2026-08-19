@@ -1,0 +1,212 @@
+{
+  "locations": [
+    "Hydra, Alger",
+    "Cheraga, Alger",
+    "Bab Ezzouar, Alger",
+    "Oran Centre, Oran"
+  ],
+  "login": {
+    "base_url": "http://localhost:8000",
+    "username": "admin",
+    "password_mask": "********",
+    "status": "Sign in to continue."
+  },
+  "dashboard": {
+    "client_count": 1240,
+    "listing_count": 932,
+    "today_visits": [
+      {
+        "client_id": 101,
+        "client_name": "Nadia B.",
+        "listing_location": "Hydra, Alger",
+        "scheduled_time": "09:30:00"
+      },
+      {
+        "client_id": 102,
+        "client_name": "Karim L.",
+        "listing_location": "Cheraga, Alger",
+        "scheduled_time": "11:00:00"
+      }
+    ],
+    "pending_contracts": [
+      {
+        "client_id": 201,
+        "client_name": "Salim A.",
+        "listing_location": "Oran Centre",
+        "contract_type": "rent",
+        "created_at": "2026-02-19T10:00:00"
+      }
+    ],
+    "expiring_contracts": [
+      {
+        "client_id": 301,
+        "client_name": "Lina T.",
+        "listing_location": "Bab Ezzouar",
+        "end_date": "2026-03-10"
+      }
+    ],
+    "hot_leads": [
+      {
+        "client_id": 401,
+        "family_name": "Ait Hamou",
+        "phone": "0662473080",
+        "count": 9
+      }
+    ]
+  },
+  "clients": {
+    "name": "Moh",
+    "phone": "0662473080",
+    "vip": true,
+    "demande": {
+      "id": 1,
+      "type": "apartment",
+      "action": "buy",
+      "wilaya": "Alger",
+      "locations": "Hydra, Alger;Cheraga, Alger",
+      "beds_min": 3,
+      "surface_min": 85,
+      "surface_max": 140,
+      "budget_min": 12000000,
+      "budget_max": 25000000,
+      "furnished": "any",
+      "floor_min": 0,
+      "floor_max": 8,
+      "elevator": true,
+      "accessibility_required": false,
+      "tags": "balcony, parking",
+      "remarks": "Close to schools"
+    },
+    "rows": [
+      [
+        "[5] Benchmark_1",
+        "0000000001",
+        "Apartment",
+        "Buy",
+        "Hydra, Alger",
+        "3",
+        "85",
+        "25000000",
+        "Any",
+        "2026-02-19",
+        "2026-02-19",
+        "Notes",
+        "Edit"
+      ]
+    ]
+  },
+  "listings": {
+    "owner_name": "Owner One",
+    "phone": "0555000101",
+    "vip_index": 1,
+    "remarks": "Available now",
+    "offer": {
+      "id": 1,
+      "type": "apartment",
+      "action": "rent",
+      "wilaya": "Alger",
+      "locations": "Hydra, Alger",
+      "beds": 3,
+      "surface": 110,
+      "budget": 180000,
+      "price_negotiable": true,
+      "price_flex_pct": 10,
+      "furnished": "yes",
+      "floor": 2,
+      "elevator": true,
+      "accessibility_supported": true,
+      "link": "https://maps.google.com/?q=36.7525,3.0420",
+      "latitude": "36.7525",
+      "longitude": "3.0420",
+      "remarks": "Sunny apartment"
+    },
+    "rows": [
+      [
+        "Owner One",
+        "0555000101",
+        "Apartment",
+        "Rent",
+        "Hydra, Alger",
+        "3",
+        "110",
+        "180000",
+        "Yes",
+        "2",
+        "2026-02-19",
+        "2026-02-19",
+        "Edit"
+      ]
+    ]
+  },
+  "match": {
+    "client_options": [
+      "[9] Ait Hamou | 0662473080",
+      "[4] Karim L. | 0559000000"
+    ],
+    "summary": "Apartment buy in Alger",
+    "results": [
+      {
+        "listing_id": 501,
+        "owner_name": "Owner One",
+        "phone": "0555000101",
+        "type": "apartment",
+        "action": "rent",
+        "location": "Hydra, Alger",
+        "beds": 3,
+        "surface": 110,
+        "budget": 180000,
+        "furnished": "yes",
+        "floor": 2,
+        "score": 8.7,
+        "link": "https://maps.google.com/?q=36.7525,3.0420",
+        "latitude": 36.7525,
+        "longitude": 3.042
+      },
+      {
+        "listing_id": 502,
+        "owner_name": "Owner Two",
+        "phone": "0555000102",
+        "type": "apartment",
+        "action": "rent",
+        "location": "Cheraga, Alger",
+        "beds": 4,
+        "surface": 130,
+        "budget": 220000,
+        "furnished": "any",
+        "floor": 3,
+        "score": 7.9,
+        "link": "https://maps.google.com/?q=36.7660,2.9590",
+        "latitude": 36.766,
+        "longitude": 2.959
+      }
+    ]
+  },
+  "crm": {
+    "visits": [
+      {
+        "id": 1,
+        "client_id": 101,
+        "listing_id": 501,
+        "scheduled_date": "2026-02-21",
+        "scheduled_time": "10:00",
+        "status": "scheduled",
+        "notes": "Bring contract draft",
+        "row_version": 1
+      }
+    ],
+    "contracts": [
+      {
+        "id": 12,
+        "client_id": 101,
+        "listing_id": 501,
+        "client_name": "Nadia B.",
+        "listing_location": "Hydra, Alger",
+        "contract_type": "rent",
+        "status": "pending_signature",
+        "start_date": "2026-03-01",
+        "end_date": "2027-03-01",
+        "amount": 1800000
+      }
+    ]
+  }
+}
