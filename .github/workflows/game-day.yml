@@ -46,16 +46,28 @@ jobs:
         image: redis:7
         ports:
           - 6379:6379
-      minio:
-        image: bitnami/minio:latest
-        env:
-          MINIO_ROOT_USER: immoapp
-          MINIO_ROOT_PASSWORD: immoapp_minio_pw
-        ports:
-          - 9000:9000
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Start MinIO (official pinned image)
+        run: |
+          docker run -d --name immoapp-ci-minio --pull=always \
+            -p 9000:9000 \
+            -e MINIO_ROOT_USER=immoapp \
+            -e MINIO_ROOT_PASSWORD=immoapp_minio_pw \
+            quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z server /data
+          for attempt in {1..45}; do
+            if curl --fail --silent --show-error http://127.0.0.1:9000/minio/health/live >/dev/null; then
+              echo "MinIO is ready"
+              break
+            fi
+            if [ "$attempt" -eq 45 ]; then
+              echo "MinIO did not become ready" >&2
+              docker logs immoapp-ci-minio || true
+              exit 1
+            fi
+            sleep 2
+          done
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
