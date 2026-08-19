@@ -19,7 +19,7 @@ You do **not** need to create a virtual environment, edit `.env` files, configur
 
 1. Clone or download this repository and extract it to a normal writable folder.
 2. Make sure Docker Desktop is running.
-3. Double-click **`Start ImmoApp Beta.cmd`**.
+3. Double-click **`Start ImmoApp Beta.cmd`**. (If you have a potato PC/internet it should take around 20mn)
 
 When the repository was downloaded as a ZIP, Windows can show an **Open File - Security Warning** for the unsigned `.cmd` launcher. Choose **Run** to continue. A verified publisher label requires a separately code-signed Windows executable/installer.
 
