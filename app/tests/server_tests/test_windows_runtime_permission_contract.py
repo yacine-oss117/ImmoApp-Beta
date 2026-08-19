@@ -3,21 +3,16 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[3]
 
 
 def test_windows_runtime_permission_repair_is_wired_into_entrypoints() -> None:
     common = (ROOT / "scripts" / "common.ps1").read_text(encoding="utf-8")
-    bootstrap = (ROOT / "scripts" / "bootstrap_local_runtime.ps1").read_text(
-        encoding="utf-8"
-    )
+    bootstrap = (ROOT / "scripts" / "bootstrap_local_runtime.ps1").read_text(encoding="utf-8")
     quickstart = (ROOT / "quickstart.ps1").read_text(encoding="utf-8")
     client = (ROOT / "scripts" / "run_client.ps1").read_text(encoding="utf-8")
     stack = (ROOT / "scripts" / "stack.ps1").read_text(encoding="utf-8")
-    repair = (ROOT / "scripts" / "repair_runtime_permissions.ps1").read_text(
-        encoding="utf-8"
-    )
+    repair = (ROOT / "scripts" / "repair_runtime_permissions.ps1").read_text(encoding="utf-8")
 
     assert "function Repair-ImmoAppHostRuntimePermissions" in common
     assert "function Invoke-ImmoAppRuntimePermissionRepairIfNeeded" in common
@@ -45,9 +40,7 @@ def test_windows_runtime_permission_repair_is_wired_into_entrypoints() -> None:
 
 
 def test_secret_acl_uses_localization_safe_sids() -> None:
-    setup = (ROOT / "scripts" / "setup_openbao_identity.ps1").read_text(
-        encoding="utf-8"
-    )
+    setup = (ROOT / "scripts" / "setup_openbao_identity.ps1").read_text(encoding="utf-8")
     assert "Get-ImmoAppDesktopUserSid" in setup
     assert "*S-1-5-18:(F)" in setup
     assert "*S-1-5-32-544:(F)" in setup

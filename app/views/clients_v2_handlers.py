@@ -99,9 +99,7 @@ class ClientsTabHandlersMixin(BaseTabHandlersMixin):
         client = self._get_client_for_edit(client_id)
         if client:
             page_scroll = getattr(self, "_page_scroll", None)
-            keep_table_focused = bool(
-                page_scroll is not None and page_scroll.records_are_focused()
-            )
+            keep_table_focused = bool(page_scroll is not None and page_scroll.records_are_focused())
             self._load_client_for_edit(client)
             if keep_table_focused and page_scroll is not None:
                 QTimer.singleShot(0, page_scroll.scroll_to_records)

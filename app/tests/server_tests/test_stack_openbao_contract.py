@@ -21,7 +21,7 @@ def test_stack_compose_hydration_supports_approle_and_path_normalization() -> No
     for token in required_tokens:
         assert token in text
 
+
 def test_bootstrap_env_assertion_array_wraps_zero_or_one_issue_results() -> None:
     text = Path("scripts/common.ps1").read_text(encoding="utf-8")
     assert "$issues = @(Get-ImmoAppEnvPlaceholderIssues -EnvFilePath $EnvFilePath)" in text
-
