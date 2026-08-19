@@ -303,9 +303,7 @@ class DemandePanel(QWidget):
         )
         if surface:
             details.append(surface)
-        budget = self._compact_budget(
-            self._data.get("budget_min"), self._data.get("budget_max")
-        )
+        budget = self._compact_budget(self._data.get("budget_min"), self._data.get("budget_max"))
         if budget:
             details.append(budget)
         locations = str(self._data.get("locations") or "").strip()
