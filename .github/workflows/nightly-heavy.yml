@@ -100,8 +100,7 @@ jobs:
       - name: Install deps + scanners
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements/server.txt -r requirements/client.txt
-          pip install bandit pip-audit
+          pip install -r requirements/server.txt -r requirements/client.txt -r requirements/ci.txt
       - name: Wait for services
         run: |
           python - <<'PY'
